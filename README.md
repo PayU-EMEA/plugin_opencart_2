@@ -1,238 +1,134 @@
-[![Code Climate](https://codeclimate.com/repos/524eb044f3ea00329815dff1/badges/885c2d52f25c02295344/gpa.png)](https://codeclimate.com/repos/524eb044f3ea00329815dff1/feed)
+# PayU account plugin for OpenCart over 2.x
 
-# Official OpenPayU PHP Library 2.1
+**Note: Plugin support only OpenCart 2.0**
 
-The OpenPayU PHP library provides integration access to the PayU Gateway API ver. 2.1
+-------
+``This plugin is released under the GPL license.``
 
-## Dependencies
+**If you have any questions or issues, feel free to contact our technical support: tech@payu.pl.**
+
+PayU account is a web application designed as an e-wallet for shoppers willing to open an account, 
+define their payment options, see their purchase history, and manage personal profiles.
+
+## Table of Contents
+
+[Features](#features)<br/>
+[Prerequisites][1] <br />
+<!--[Installation][2]-->
+ * 
+[Installing Manually][2.1]
+
+<!--* [Installing from admin page][2.2]-->
+
+[Configuration][3]
+* [Configuration Parameters][3.1]
+
+##Features
+The PayU payments OpenCart plugin adds the PayU payment option and enables you to process the following operations in your e-shop:
+
+* Creating a payment order (with discounts included)
+* Cancelling a payment order
+* Conducting a refund operation (for a whole or partial order)
+
+## Prerequisites
+
+**Important:** This plugin works only with checkout points of sales (POS).
 
 The following PHP extensions are required:
 
-* cURL
-* hash
-
-## Documentation
-
-Full implementation guide [[English](http://developers.payu.com/en/)][[Polish](http://developers.payu.com/)].
-
-To process operations such as:
- - [order status update](examples/v2/order/OrderStatusUpdate.php)
- - [order retrieve](examples/v2/order/OrderRetrieve.php)
- - [order cancel](examples/v2/order/OrderCancel.php)
-
-You will need to provide a parameter called <b>orderId</b>. The value of orderId is your order identifier that is set by PayU
-Payment system, and it's used to invoke remote methods.
-
-There are two ways to get orderId:
-
-1. It is present inside the received notification message from PayU Payment System as a result of payment.
-2. In the response from method OpenPayU_Order::create. 
-
-In both cases you will find orderId using this statement: $response->getResponse()->orderId.
+* [cURL][ext2] to connect and communicate to many different types of servers with many different types of protocols.
+* [hash][ext3] to process directly or incrementally the arbitrary length messages by using a variety of hashing algorithms.
+* [XMLWriter][ext4] to wrap the libxml xmlWriter API.
+* [XMLReader][ext5] that acts as a cursor going forward on the document stream and stopping at each node on the way.
 
 ## Installation
 
-### Composer
-To install with Composer, simply add the requirement to your composer.json file:
+<!--There are two ways in which you can install the plugin:
 
-```php
-{
-  "require" : {
-    "openpayu/openpayu" : "2.1.*"
-  }
-}
-```
-Then install by running
+* [manual installation][2.1] by copying and pasting folders from the repository
+* [installation][2.2] from the administration page
 
-```php
-composer.phar install
-```
+See the sections below to find out about steps for each of the procedures.-->
 
-### Manual installation
-Obtain the latest version of openpayu_php SDK with:
-```php
-git clone https://github.com/PayU/openpayu_php.git
-```
+### Installing Manually
 
-## Getting started
+To install the plugin, copy folders and activate it on the administration page:
 
-If you are using Composer use autoload functionality:
+1. Copy the folders from [the plugin repository][ext1] to your OpenCart root folder on the server.
+2. Go to the OpenCart administration page [http://your-opencart-url/admin].
+3. Go to **Extensions** > **Payments**.
+4. In the **PayU** section click **Install**.
 
-```php
-include "vendor/autoload.php";
-```
 
-Or simply add this lines anywhere in your application:
+<!--### Installing from the PrestaShop administration page
 
-```php
-    require_once 'lib/openpayu.php';
-    require_once realpath(dirname(__FILE__)) . '/../../config.php';
-```
+PrestaShop allows you to install the plugin from the administration page. -->
 
-##Configure
-  To configure OpenPayU environment you must provide a set of mandatory data in config.php file:
+## Configuration
 
-```php
-    OpenPayU_Configuration::setEnvironment('secure');
-    OpenPayU_Configuration::setMerchantPosId('145227'); // POS ID (Checkout)
-    OpenPayU_Configuration::setSignatureKey('13a980d4f851f3d9a1cfc792fb1f5e50'); //Second MD5 key. You will find it in admin panel.
-```
+1. Go to the OpenCart administration page [http://your-opencart-url/admin].
+2. Go to **Extensions** > **Payments**.
+3. In the **PayU** section click **Edit**.
 
-##Usage
 
-Remember: All keys in "order array" must be in lowercase.
+<!--Independently from the installation method, the configuration looks the same:-->
 
-###Creating order using HTML form
+### Configuration Parameters
 
-   File with working example: [examples/v2/order/OrderForm.php](examples/v2/order/OrderForm.php)
+The tables below present the descriptions of the configuration form parameters.
 
-   To create an order using HTML form you must provide an Array with order data:
+#### Main parameters
 
-   in your controller
-```php
-        $order['notifyUrl'] = 'http://localhost';
-        $order['continueUrl'] = 'http://localhost';
+The main parameters for plugin configuration are as follows:
 
-        $order['customerIp'] = '127.0.0.1';
-        $order['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
-        $order['description'] = 'New order';
-        $order['currencyCode'] = 'PLN';
-        $order['totalAmount'] = 3200;
-        $order['extOrderId'] = rand(1000, 1000000);
+| Parameter | Values | Description | 
+|:---------:|:------:|:-----------:|
+|Status|Enabled/Disabled|Specifies whether the module is enabled.|
+|Sort Order|Positive integers|The priority that the payment method gets in the payment methods list.|
 
-        $order['products'][0]['name'] = 'Product1';
-        $order['products'][0]['unitPrice'] = 1000;
-        $order['products'][0]['quantity'] = 1;
+#### Parameters of production environment
 
-        $order['products'][1]['name'] = 'Product2';
-        $order['products'][1]['unitPrice'] = 2200;
-        $order['products'][1]['quantity'] = 1;
+<!--To check the values of the parameters below, go to **Administration Panel** > **My shops** > **Your shop** > **POS** and click the name of a given POS.
+-->
 
-        $order['buyer']['email'] = 'dd@ddd.pl';
-        $order['buyer']['phone'] = '123123123';
-        $order['buyer']['firstName'] = 'Jan';
-        $order['buyer']['lastName'] = 'Kowalski';
+| Parameter | Description | 
+|:---------:|:-----------:|
+|POS ID|Unique ID of the POS|
+|Second Key| MD5 key for securing communication|
 
-    $orderFormData = OpenPayU_Order::hostedOrderForm($order);
-```
-  in your view
-```php
-<html>
-<?php echo $orderFormData; ?>
-</html>
-```
-  or just
-```php
-echo $orderFormData
-```
+#### Status parameters
 
-###Creating order using REST API
+Defines which status is assigned to an order at a particular stage of order processing.
 
-   File with working example: [examples/v2/order/OrderCreate.php](examples/v2/order/OrderCreate.php)
+#### Settings of external resources
 
-   To create an order using REST API in back-end you must provide an Array with order data:
+You can set external resources for the following:
 
-   in your controller
-```php
-    $order['continueUrl'] = 'http://localhost/'; //customer will be redirected to this page after successfull payment
-    $order['notifyUrl'] = 'http://localhost/';
-    $order['customerIp'] = $_SERVER['REMOTE_ADDR'];
-    $order['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
-    $order['description'] = 'New order';
-    $order['currencyCode'] = 'PLN';
-    $order['totalAmount'] = 3200;
-    $order['extOrderId'] = '1342'; //must be unique!
+| Parameter |Description | 
+|:---------:|:-----------:|
+|Small logo|Button for accepting payments|
 
-    $order['products'][0]['name'] = 'Product1';
-    $order['products'][0]['unitPrice'] = 1000;
-    $order['products'][0]['quantity'] = 1;
+<!--LINKS-->
 
-    $order['products'][1]['name'] = 'Product2';
-    $order['products'][1]['unitPrice'] = 2200;
-    $order['products'][1]['quantity'] = 1;
+<!--topic urls:-->
 
-//optional section buyer
-    $order['buyer']['email'] = 'dd@ddd.pl';
-    $order['buyer']['phone'] = '123123123';
-    $order['buyer']['firstName'] = 'Jan';
-    $order['buyer']['lastName'] = 'Kowalski';
+[1]: https://github.com/PayU/plugin_opencart_153#prerequisites
+[2]: https://github.com/PayU/plugin_opencart_153#installation
+[2.1]: https://github.com/PayU/plugin_opencart_153#installing-manually
+[2.2]: https://github.com/PayU/plugin_opencart_153#installing-from-admin-page
+[3]: https://github.com/PayU/plugin_opencart_153#configuration
+[3.1]: https://github.com/PayU/plugin_opencart_153#configuration-parameters
+[3.1.1]: https://github.com/PayU/plugin_opencart_153#main-parameters
+[3.1.2]: https://github.com/PayU/plugin_opencart_153#parameters-of-production-and-test-environments
+[3.1.3]: https://github.com/PayU/plugin_opencart_153#settings-of-external-resources
 
-    $response = OpenPayU_Order::create($order);
 
-    header('Location:'.$response->getResponse()->redirectUri); //You must redirect your client to PayU payment summary page.
-```
+<!--external links:-->
 
-###Retrieving order from OpenPayU
+[ext1]: https://github.com/PayU/plugin_opencart_153
+[ext2]: http://php.net/manual/en/book.curl.php
+[ext3]: http://php.net/manual/en/book.hash.php
+[ext4]: http://php.net/manual/en/book.xmlwriter.php
+[ext5]: http://php.net/manual/en/book.xmlreader.php
 
-   File with working example: [examples/v2/order/OrderRetrieve.php](examples/v2/order/OrderRetrieve.php)
-
-   You can retrieve order by its PayU order_id
-
-```php
-    $response = OpenPayU_Order::retrieve('Z963D5JQR2230925GUEST000P01'); //as parameter use orderId
-```
-
-###Cancelling order
-
-   File with working example: [examples/v2/order/OrderCancel.php](examples/v2/order/OrderCancel.php)
-
-   You can cancel order by its PayU order_id
-
-```php
-    $response = OpenPayU_Order::cancel('Z963D5JQR2230925GUEST000P01'); //as parameter use orderId
-```
-
-###Updating order status
-
-   File with working example: [examples/v2/order/OrderStatusUpdate.php](examples/v2/order/OrderStatusUpdate.php)
-
-   You can update order status to accept order.
-
-```php
-    $status_update = array(
-        "orderId" => 'Z963D5JQR2230925GUEST000P01', //as value use ORDER_ID
-        "orderStatus" => 'COMPLETED'
-    );
-
-    $response = OpenPayU_Order::statusUpdate($status_update);
-```
-
-###Handling notifications from PayU
-
-   File with working example: [examples/v2/order/OrderNotify.php](examples/v2/order/OrderNotify.php)
-
-   PayU sends requests to your application when order status changes
-
-```php
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $body = file_get_contents('php://input');
-        $data = stripslashes(trim($body));
-
-        $response = OpenPayU_Order::consumeNotification($data);
-        $response->getResponse()->order->status; //NEW PENDING CANCELLED REJECTED COMPLETED WAITING_FOR_CONFIRMATION
-
-        header("HTTP/1.1 200 OK");
-    }
-```
-
-###Refund money
-
-   File with working example: [examples/v2/refund/RefundCreate.php](examples/v2/refund/RefundCreate.php)
-
-   You can create refund to refund money on buyer account
-
-```php
-    $refund = OpenPayU_Refund::create(
-        'Z963D5JQR2230925GUEST000P01', //as a value use ORDER_ID
-        'Money refund', //Description - required
-        '100' //Amount - If not provided, returns whole transaction, optional
-    );
-```
-
-## Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+<!--images:-->

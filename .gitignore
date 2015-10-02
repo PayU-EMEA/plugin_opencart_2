@@ -106,8 +106,7 @@ ClientBin
 stylecop.*
 ~$*
 *.dbmdl
-#added for RIA/Silverlight projects
-Generated_Code
+Generated_Code #added for RIA/Silverlight projects
 
 # Backup & report files from converting an old project file to a newer
 # Visual Studio version. Backup files are not needed, because we have git ;-)
@@ -164,5 +163,3 @@ pip-log.txt
 .DS_Store
 
 .idea
-vendor/*
-composer.lock
