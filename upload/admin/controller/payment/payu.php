@@ -11,6 +11,7 @@
 class ControllerPaymentPayU extends Controller
 {
     private $error = array();
+    private $settings = array();
 
     //Config page
     public function index()
@@ -55,94 +56,54 @@ class ControllerPaymentPayU extends Controller
         $data['help_signaturekey'] = $this->language->get('help_signaturekey');
         $data['help_total'] = $this->language->get('help_total');
 
-        //error data
-        if (isset($this->error['warning'])) {
-            $data['error_warning'] = $this->error['warning'];
-        } else {
-            $data['error_warning'] = '';
-        }
-        if (isset($this->error['signaturekey'])) {
-            $data['error_signaturekey'] = $this->error['signaturekey'];
-        } else {
-            $data['error_signaturekey'] = '';
-        }
-        if (isset($this->error['merchantposid'])) {
-            $data['error_merchantposid'] = $this->error['merchantposid'];
-        } else {
-            $data['error_merchantposid'] = '';
-        }
+        //Errors
+        $data['error_warning'] = isset($this->error['warning']) ? $this->error['warning'] : '';
+        $data['error_signaturekey'] = isset($this->error['signaturekey']) ? $this->error['signaturekey'] : '';
+        $data['error_merchantposid'] = isset($this->error['merchantposid']) ? $this->error['merchantposid'] : '';
 
-        if (isset($this->request->post['payu_total'])) {
-            $data['payu_total'] = $this->request->post['payu_total'];
-        } else {
-            $data['payu_total'] = $this->config->get('payu_total');
-        }
-
-        if (isset($this->request->post['payu_geo_zone_id'])) {
-            $data['payu_geo_zone_id'] = $this->request->post['payu_geo_zone_id'];
-        } else {
-            $data['payu_geo_zone_id'] = $this->config->get('payu_geo_zone_id');
-        }
+        //Zones, order statuses
         $this->load->model('localisation/geo_zone');
-
         $data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();
-        //preloaded config
-        if (isset($this->request->post['payu_signaturekey'])) {
-            $data['payu_signaturekey'] = $this->request->post['payu_signaturekey'];
-        } else {
-            $data['payu_signaturekey'] = $this->config->get('payu_signaturekey');
-        }
-        if (isset($this->request->post['payu_merchantposid'])) {
-            $data['payu_merchantposid'] = $this->request->post['payu_merchantposid'];
-        } else {
-            $data['payu_merchantposid'] = $this->config->get('payu_merchantposid');
-        }
+        $this->load->model('localisation/order_status');
+        $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
 
-        if (isset($this->request->post['payu_status'])) {
-            $data['payu_status'] = $this->request->post['payu_status'];
-        } else {
-            $data['payu_status'] = $this->config->get('payu_status');
-        }
+        //Settings
+        $data['payu_total'] = isset($this->request->post['payu_total']) ?
+            $this->request->post['payu_total'] : $this->config->get('payu_total');
+
+        $data['payu_geo_zone_id'] = isset($this->request->post['payu_geo_zone_id']) ?
+            $this->request->post['payu_geo_zone_id'] : $this->config->get('payu_geo_zone_id');
+
+        $data['payu_signaturekey'] = isset($this->request->post['payu_signaturekey']) ?
+            $this->request->post['payu_signaturekey'] : $this->config->get('payu_signaturekey');
+
+        $data['payu_merchantposid'] = isset($this->request->post['payu_merchantposid']) ?
+            $this->request->post['payu_merchantposid'] : $this->config->get('payu_merchantposid');
+
+        $data['payu_status'] = isset($this->request->post['payu_status']) ?
+            $this->request->post['payu_status'] : $this->config->get('payu_status');
+
+        $data['payu_sort_order'] = isset($this->request->post['payu_sort_order']) ?
+            $this->request->post['payu_sort_order'] :  $this->config->get('payu_sort_order');
 
         //Status
-        if (isset($this->request->post['payu_new_status'])) {
-            $data['payu_new_status'] = $this->request->post['payu_new_status'];
-        } else {
-            $data['payu_new_status'] = $this->config->get('payu_new_status');
-        }
+        $data['payu_new_status'] = isset($this->request->post['payu_new_status']) ?
+            $this->request->post['payu_new_status'] : $this->config->get('payu_new_status');
 
-        if (isset($this->request->post['payu_cancelled_status'])) {
-            $data['payu_cancelled_status'] = $this->request->post['payu_cancelled_status'];
-        } else {
-            $data['payu_cancelled_status'] = $this->config->get('payu_cancelled_status');
-        }
+        $data['payu_cancelled_status'] = isset($this->request->post['payu_cancelled_status']) ?
+            $this->request->post['payu_cancelled_status'] : $this->config->get('payu_cancelled_status');
 
-        if (isset($this->request->post['payu_pending_status'])) {
-            $data['payu_pending_status'] = $this->request->post['payu_pending_status'];
-        } else {
-            $data['payu_pending_status'] = $this->config->get('payu_pending_status');
-        }
+        $data['payu_pending_status'] = isset($this->request->post['payu_pending_status']) ?
+            $this->request->post['payu_pending_status'] : $this->config->get('payu_pending_status');
 
-        if (isset($this->request->post['payu_complete_status'])) {
-            $data['payu_complete_status'] = $this->request->post['payu_complete_status'];
-        } else {
-            $data['payu_complete_status'] = $this->config->get('payu_complete_status');
-        }
+        $data['payu_complete_status'] = isset($this->request->post['payu_complete_status']) ?
+            $this->request->post['payu_complete_status'] : $this->config->get('payu_complete_status');
 
-        if (isset($this->request->post['payu_waiting_for_confirmation_status'])) {
-            $data['payu_waiting_for_confirmation_status'] = $this->request->post['payu_waiting_for_confirmation_status'];
-        } else {
-            $data['payu_waiting_for_confirmation_status'] = $this->config->get('payu_waiting_for_confirmation_status');
-        }
+        $data['payu_waiting_for_confirmation_status'] = isset($this->request->post['payu_waiting_for_confirmation_status']) ?
+             $this->request->post['payu_waiting_for_confirmation_status']:  $this->config->get('payu_waiting_for_confirmation_status');
 
 
-        if (isset($this->request->post['payu_sort_order'])) {
-            $data['payu_sort_order'] = $this->request->post['payu_sort_order'];
-        } else {
-            $data['payu_sort_order'] = $this->config->get('payu_sort_order');
-        }
-
-
+        //Breadcroumbs
         $data['breadcrumbs'] = array();
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_home'),
@@ -157,12 +118,10 @@ class ControllerPaymentPayU extends Controller
             'href' => $this->url->link('payment/payu', 'token=' . $this->session->data['token'], 'SSL')
         );
 
-//links
+        //links
         $data['action'] = $this->url->link('payment/payu', 'token=' . $this->session->data['token'], 'SSL');
         $data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL');
 
-        $this->load->model('localisation/order_status');
-        $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
 
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
@@ -194,12 +153,27 @@ class ControllerPaymentPayU extends Controller
     public function install()
     {
         $this->load->model('payment/payu');
+        $this->load->model('setting/setting');
+
+        $this->settings = array(
+            'payu_new_status' => 1,
+            'payu_pending_status' => 1,
+            'payu_complete_status' => 5,
+            'payu_cancelled_status' => 7,
+            'payu_waiting_for_confirmation_status' => 1,
+            'payu_geo_zone_id' => 0,
+            'payu_sort_order' => 1,
+        );
+        $this->model_setting_setting->editSetting('payu', $this->settings);
         $this->model_payment_payu->createDatabaseTables();
     }
 
     public function uninstall()
     {
         $this->load->model('payment/payu');
+        $this->load->model('setting/setting');
+
+        $this->model_setting_setting->deleteSetting('payu');
         $this->model_payment_payu->dropDatabaseTables();
     }
 
