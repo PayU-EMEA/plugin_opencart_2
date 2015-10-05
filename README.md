@@ -1,6 +1,6 @@
 # PayU account plugin for OpenCart over 2.x
 
-**Note: Plugin supports only OpenCart 2.0**
+**Note: Plugin supports only OpenCart 2.x**
 
 
 ``This plugin is released under the GPL license.``
@@ -12,11 +12,11 @@ define their payment options, see their purchase history, and manage personal pr
 
 ## Table of Contents
 
-1. [Features][0]<br/>
-2. [Prerequisites][1] <br />
-3. [Installation][2]<br />
-4. [Configuration][3]
-4.1. [Configuration Parameters][3.1]
+- [Features][0]<br/>
+- [Prerequisites][1] <br />
+- [Installation][2]<br />
+- [Configuration][3]<br />
+    - [Configuration Parameters][3.1]
 
 ## Features
 The PayU payments OpenCart plugin adds the PayU payment option and enables you to process the following operation in your e-shop:
