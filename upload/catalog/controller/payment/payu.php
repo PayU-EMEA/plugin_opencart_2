@@ -30,8 +30,7 @@ class ControllerPaymentPayU extends Controller
         OpenPayU_Configuration::setSignatureKey($this->config->get('payu_signaturekey'));
         OpenPayU_Configuration::setEnvironment();
         OpenPayU_Configuration::setApiVersion(2.1);
-        OpenPayU_Configuration::setSender("OpenCart ver 2.x/Plugin ver 0.3.0");
-        OpenPayU_Order::
+        OpenPayU_Configuration::setSender('OpenCart ver '.VERSION.' / Plugin ver 3.0.0');
         $this->logger = new Log('payu.log');
     }
 
