@@ -11,10 +11,6 @@
 
 class ControllerPaymentPayU extends Controller
 {
-    private $endStatuses = array(
-        'CANCELED' => true,
-        'COMPLETED' => true
-    );
     const ORDER_V2_PENDING =  'PENDING';
     const ORDER_V2_CANCELED = 'CANCELED';
     const ORDER_V2_REJECTED = 'REJECTED';
@@ -35,7 +31,7 @@ class ControllerPaymentPayU extends Controller
         OpenPayU_Configuration::setEnvironment();
         OpenPayU_Configuration::setApiVersion(2.1);
         OpenPayU_Configuration::setSender("OpenCart ver 2.x/Plugin ver 0.3.0");
-
+        OpenPayU_Order::
         $this->logger = new Log('payu.log');
     }
 
@@ -125,7 +121,7 @@ class ControllerPaymentPayU extends Controller
                     );
                 } else {
 
-                    if (!array_key_exists($orderInfo['status'], $this->endStatuses)) {
+                    if ($orderInfo['status'] != self::ORDER_V2_COMPLETED) {
                         $newstatus = $this->getPaymentStatusId($orderRetrive->getResponse()->orders[0]->status);
 
                         if ($newstatus && $newstatus != $orderInfo['status']) {
