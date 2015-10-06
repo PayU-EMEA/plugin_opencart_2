@@ -1,4 +1,5 @@
 <?php
+
 /*
 * ver. 3.0.0
 * PayU Payment Modules
@@ -11,7 +12,7 @@
 
 class ControllerPaymentPayU extends Controller
 {
-    const ORDER_V2_PENDING =  'PENDING';
+    const ORDER_V2_PENDING = 'PENDING';
     const ORDER_V2_CANCELED = 'CANCELED';
     const ORDER_V2_REJECTED = 'REJECTED';
     const ORDER_V2_COMPLETED = 'COMPLETED';
@@ -30,7 +31,7 @@ class ControllerPaymentPayU extends Controller
         OpenPayU_Configuration::setSignatureKey($this->config->get('payu_signaturekey'));
         OpenPayU_Configuration::setEnvironment();
         OpenPayU_Configuration::setApiVersion(2.1);
-        OpenPayU_Configuration::setSender('OpenCart ver '.VERSION.' / Plugin ver 3.0.0');
+        OpenPayU_Configuration::setSender('OpenCart ver ' . VERSION . ' / Plugin ver 3.0.0');
         $this->logger = new Log('payu.log');
     }
 
@@ -68,7 +69,10 @@ class ControllerPaymentPayU extends Controller
                         $this->session->data['order_id'],
                         $this->session->data['sessionId']
                     );
-                    $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('payu_new_status'));
+                    $this->model_checkout_order->addOrderHistory(
+                        $this->session->data['order_id'],
+                        $this->config->get('payu_new_status')
+                    );
 
                     $return['status'] = 'SUCCESS';
                     $return['redirectUri'] = $response->getResponse()->redirectUri . '&lang=' .
@@ -159,6 +163,7 @@ class ControllerPaymentPayU extends Controller
                     return false;
             }
         }
+
         return false;
     }
 
@@ -179,7 +184,6 @@ class ControllerPaymentPayU extends Controller
         $this->tax->setPaymentAddress($order_info['payment_country_id'], $order_info['payment_zone_id']);
         $this->tax->setStoreAddress($this->config->get('config_country_id'), $this->config->get('config_zone_id'));
         $grandTotal = 0;
-        $cartItems = array();
         $orderType = 'VIRTUAL';
         $shippingCostAmount = 0.0;
 
@@ -190,38 +194,27 @@ class ControllerPaymentPayU extends Controller
             foreach ($this->session->data['vouchers'] as $voucher) {
                 $this->vouchersAmount += $this->currency->format($voucher['amount']);
                 $OCRV2['products'] [] = array(
-                    'quantity' => 1, 'name' => $voucher['description'], 'unitPrice' => $this->toAmount($voucher['amount'])
+                    'quantity' => 1,
+                    'name' => $voucher['description'],
+                    'unitPrice' => $this->toAmount($voucher['amount'])
                 );
             }
         }
 
         foreach ($this->cart->getProducts() as $item) {
 
-            list($productOrderType, $OCRV2, $grandTotal) = $this->prepareProductsSection($decimalPlace, $item, $order_info, $OCRV2, $grandTotal);
-
-            if ($productOrderType == 'MATERIAL') {
-                $orderType = $productOrderType;
-            }
-
+            list($productOrderType, $OCRV2, $grandTotal) = $this->prepareProductsSection(
+                $decimalPlace,
+                $item,
+                $order_info,
+                $OCRV2,
+                $grandTotal
+            );
         }
 
-        $shoppingCart = array(
-            'GrandTotal' => $grandTotal,
-            'CurrencyCode' => $order_info['currency_code'],
-            'ShoppingCartItems' => $cartItems
-        );
-
-
-        $order = array(
-            'MerchantPosId' => OpenPayU_Configuration::getMerchantPosId(),
-            'SessionId' => '',
-            'OrderUrl' => $this->url->link('account/order/info') . '?order=' . $this->session->data['order_id'],
-            'OrderCreateDate' => date("c"),
-            'OrderDescription' => 'Order ' . $this->session->data['order_id'],
-            'MerchantAuthorizationKey' => OpenPayU_Configuration::getPosAuthKey(),
-            'OrderType' => $orderType, // keyword: MATERIAL or VIRTUAL
-            'ShoppingCart' => $shoppingCart
-        );
+        if ($productOrderType == 'MATERIAL') {
+            $orderType = $productOrderType;
+        }
 
         $OCReq = array(
             'ReqId' => md5(rand()),
@@ -231,8 +224,7 @@ class ControllerPaymentPayU extends Controller
                 )) ? '127.0.0.1' : $order_info['ip']),
             // note, this should be real ip of customer retrieved from $_SERVER['REMOTE_ADDR']
             'NotifyUrl' => $this->url->link('payment/payu/ordernotify'),
-            'OrderCompleteUrl' => $this->url->link('checkout/success'),
-            'Order' => $order
+            'OrderCompleteUrl' => $this->url->link('checkout/success')
         );
 
         $customer = array();
@@ -255,80 +247,55 @@ class ControllerPaymentPayU extends Controller
             if (!empty($custdata['email'])) {
 
                 $customer = array(
-                    'email' => $order_info['email'],
-                    'firstName' => $order_info['firstname'],
-                    'lastName' => $order_info['lastname'],
-                    'phone' => $order_info['telephone']
+                    'email' => $custdata['email'],
+                    'firstName' => $custdata['firstname'],
+                    'lastName' => $custdata['lastname'],
+                    'phone' => $custdata['telephone']
                 );
             }
         }
 
         if ($orderType == 'MATERIAL') {
+
             if (!empty($customer) && !empty($order_info['shipping_city']) && !empty($order_info['shipping_postcode']) && !empty($order_info['payment_iso_code_2'])) {
 
                 $customer['delivery'] = array(
                     'street' => $order_info['shipping_address_1'] . " " . ($order_info['shipping_address_2'] ? $order_info['shipping_address_2'] : ''),
                     'postalCode' => $order_info['shipping_postcode'],
                     'city' => $order_info['shipping_city'],
-                    //'State' => $order_info['shipping_zone'],
                     'countryCode' => $order_info['payment_iso_code_2'],
                     'recipientName' => $order_info['shipping_firstname'] . " " . $order_info['shipping_lastname'],
                     'recipientPhone' => $order_info['telephone'],
-                    'recipientEmail' => $order_info['email']);
+                    'recipientEmail' => $order_info['email']
+                );
             }
 
             if (!empty($order_info['shipping_method'])) {
-
-                list($shippingCostList, $shippingCostAmount) = $this->prepareShippingMethodsSection($decimalPlace, $order_info);
-
-
-            } else {
-
-                $shippingCostList = array();
-                $shipping_methods = $this->getShippings(
-                    $this->session->data['order_id'],
-                    $order_info['shipping_country_id']
+                list($shippingCostList, $shippingCostAmount) = $this->prepareShippingMethodsSection(
+                    $decimalPlace,
+                    $order_info
                 );
-                $country = $this->model_localisation_country->getCountry($order_info['shipping_country_id']);
-
-                foreach ($shipping_methods as $onemethod) {
-                    if (empty($decimalPlace)) {
-                        $onemethod['cost'] *= 100;
-                        $shippingCostAmount = $shippingCost;
-                    }
-
-                    $price = $this->currency->format(
-                        $this->tax->calculate($onemethod['cost'], $onemethod['tax_class_id']),
-                        $order_info['currency_code'],
-                        false,
-                        false
-                    );
-
-                    $price = preg_replace("/[^0-9]/", "", $price);
-
-                    $shippingCostList ['shippingMethods'] [] = array(
-                        'name' => $onemethod['title'], 'country' => $country['iso_code_2'], 'price' => $price
-                    );
-
-                }
-
             }
 
         }
 
         if (isset($this->session->data['coupon']) || !empty($this->session->data['coupon'])) {
-
-            $OCRV2 = $this->prepareCumulatedProductsArray($OCRV2, $order_info, $shippingCostAmount);
+            $OCRV2 = $this->prepareCumulatedProductsArray(
+                $OCRV2,
+                $order_info,
+                $shippingCostAmount,
+                $this->language->get('text_payu_order')
+            );
         }
 
-        $OCRV2 ['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
-        $OCRV2 ['orderUrl'] = $this->url->link('payment/payu/callback') . '?order=' . $this->session->data['order_id'];
-        $OCRV2 ['description'] = $this->language->get('text_payu_order').' #' . $this->session->data['order_id'];
-        $OCRV2 ['customerIp'] = $OCReq['CustomerIp'];
-        $OCRV2 ['notifyUrl'] = $OCReq['NotifyUrl'];
-        $OCRV2 ['continueUrl'] = $OCReq['OrderCompleteUrl'];
-        $OCRV2 ['currencyCode'] = $order_info['currency_code'];
-        $OCRV2 ['settings.invoiceDisabled'] = 1;
+        $OCRV2['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
+        $OCRV2['orderUrl'] = $this->url->link('payment/payu/callback') . '?order=' . $this->session->data['order_id'];
+        $OCRV2['description'] = $this->language->get('text_payu_order') . ' #' . $this->session->data['order_id'];
+        $OCRV2['customerIp'] = $OCReq['CustomerIp'];
+        $OCRV2['notifyUrl'] = $OCReq['NotifyUrl'];
+        $OCRV2['continueUrl'] = $OCReq['OrderCompleteUrl'];
+        $OCRV2['currencyCode'] = $order_info['currency_code'];
+        $OCRV2['settings']['invoiceDisabled'] = true;
 
         $total = $order_info['total'];
 
@@ -339,13 +306,15 @@ class ControllerPaymentPayU extends Controller
         $total = str_ireplace(
             array('.', ' '),
             array('', ''),
-            $this->currency->format($total - $shippingCostAmount, $order_info['currency_code'], false, false));
+            $this->currency->format($total - $shippingCostAmount, $order_info['currency_code'], false, false)
+        );
 
-        $OCRV2 ['totalAmount'] = $total;
-        $OCRV2 ['extOrderId'] = $this->session->data['order_id'] . '-' . md5(microtime());
-        if (isset($shippingCostList))
-            $OCRV2 ['shippingMethods'] = $shippingCostList['shippingMethods'];
-        $OCRV2 ['buyer'] = $customer;
+        $OCRV2['totalAmount'] = $total;
+        $OCRV2['extOrderId'] = $this->session->data['order_id'] . '-' . md5(microtime());
+        if (isset($shippingCostList)) {
+            $OCRV2['shippingMethods'] = $shippingCostList['shippingMethods'];
+        }
+        $OCRV2['buyer'] = $customer;
 
         return $OCRV2;
 
@@ -361,63 +330,37 @@ class ControllerPaymentPayU extends Controller
     {
         $val = $value * 100;
         $round = (int)round($val);
+
         return $round;
-    }
-
-    //Returns possible shipping for order & country
-    protected function getShippings($order_id, $country_id, $zone_id = 0)
-    {
-        $shipping_address = array(
-            "country_id" => $country_id,
-            "zone_id" => $zone_id
-        );
-        $this->load->model('checkout/order');
-        $order_info = $this->model_checkout_order->getOrder($order_id);
-        if (isset($order_info['products'])) {
-            $products = $order_info['products'];
-            if (!empty($products)) {
-                foreach ($products as $product) {
-                    $this->cart->add($product['product_id'], $product['quantity']);
-                }
-            }
-        }
-        $this->load->model('setting/extension');
-        $results = $this->model_setting_extension->getExtensions('shipping');
-        $quote_data = array();
-        foreach ($results as $result) {
-            if ($this->config->get($result['code'] . '_status')) {
-                $this->load->model('shipping/' . $result['code']);
-                $quote = $this->{'model_shipping_' . $result['code']}->getQuote($shipping_address);
-                if ($quote) {
-                    $quote_data[$result['code']] = $quote['quote'][$result['code']];
-                }
-            }
-        }
-
-        //error connected with cart
-        //$this->cart->clear();
-        return $quote_data;
     }
 
     /**
      * @param $OCRV2
      * @param $order_info
      * @param $shippingCostAmount
+     * @param $txt_prefix
      * @return mixed
      */
-    private function prepareCumulatedProductsArray($OCRV2, $order_info, $shippingCostAmount)
+    private function prepareCumulatedProductsArray($OCRV2, $order_info, $shippingCostAmount, $txt_prefix)
     {
         unset($OCRV2['products']);
         $OCRV2['products'] = array();
         $totalProducts = str_ireplace(
             array('.', ' '),
             array('', ''),
-            $this->currency->format($this->toAmount((int)($order_info['total'])) - $shippingCostAmount, $order_info['currency_code'], false, false));
+            $this->currency->format(
+                $this->toAmount((int)($order_info['total'])) - $shippingCostAmount,
+                $order_info['currency_code'],
+                false,
+                false
+            )
+        );
         $OCRV2['products'] [] = array(
             'quantity' => 1,
-            'name' => 'Order id:' . $this->session->data['order_id'],
+            'name' => $txt_prefix . ':' . $this->session->data['order_id'],
             'unitPrice' => $totalProducts
         );
+
         return $OCRV2;
     }
 
@@ -440,13 +383,17 @@ class ControllerPaymentPayU extends Controller
             $this->tax->calculate(
                 $shippingCost,
                 $this->session->data['shipping_method']['tax_class_id']
-            ));
+            )
+        );
 
         $price = preg_replace("/[^0-9]/", "", $price);
 
         $shippingCostList ['shippingMethods'] [] = array(
-            'name' => $order_info['shipping_method'], 'country' => $order_info['payment_iso_code_2'], 'price' => $price
+            'name' => $order_info['shipping_method'],
+            'country' => $order_info['payment_iso_code_2'],
+            'price' => $price
         );
+
         return array($shippingCostList, $shippingCostAmount);
     }
 
@@ -471,13 +418,17 @@ class ControllerPaymentPayU extends Controller
         $itemGross = str_ireplace(
             array('.', ' '),
             array('', ''),
-            $this->currency->format($gross, $order_info['currency_code'], false, false));
+            $this->currency->format($gross, $order_info['currency_code'], false, false)
+        );
 
         $OCRV2['products'] [] = array(
-            'quantity' => $item['quantity'], 'name' => $item['name'], 'unitPrice' => $itemGross
+            'quantity' => $item['quantity'],
+            'name' => $item['name'],
+            'unitPrice' => $itemGross
         );
 
         $grandTotal += $itemGross * $item['quantity'];
+
         return array($orderType, $OCRV2, $grandTotal);
     }
 }
