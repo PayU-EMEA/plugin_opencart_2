@@ -53,7 +53,6 @@ class ControllerPaymentPayU extends Controller
             $this->language->load('payment/payu');
             $this->load->model('checkout/order');
             $this->load->model('payment/payu');
-            $this->load->library('log');
 
             //OCR
             $this->loadLibConfig();
