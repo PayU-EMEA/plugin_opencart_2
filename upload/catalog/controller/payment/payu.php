@@ -1,7 +1,7 @@
 <?php
 
 /*
-* ver. 3.0.0
+* ver. 3.0.1
 * PayU Payment Modules
 *
 * @copyright  Copyright 2015 by PayU
@@ -20,6 +20,8 @@ class ControllerPaymentPayU extends Controller
 
     const PAY_BUTTON = 'https://static.payu.com/pl/standard/partners/buttons/payu_account_button_01.png';
 
+    const VERSION = '3.0.1';
+
     protected $vouchersAmount = 0.0;
 
     //loading PayU SDK
@@ -31,7 +33,7 @@ class ControllerPaymentPayU extends Controller
         OpenPayU_Configuration::setSignatureKey($this->config->get('payu_signaturekey'));
         OpenPayU_Configuration::setEnvironment();
         OpenPayU_Configuration::setApiVersion(2.1);
-        OpenPayU_Configuration::setSender('OpenCart ver ' . VERSION . ' / Plugin ver 3.0.0');
+        OpenPayU_Configuration::setSender('OpenCart ver ' . VERSION . ' / Plugin ver '.self::VERSION);
         $this->logger = new Log('payu.log');
     }
 
