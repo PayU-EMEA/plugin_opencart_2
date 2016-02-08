@@ -1,7 +1,7 @@
 <?php
 
 /*
-* ver. 3.0.1
+* ver. 3.1.0-DEV
 * PayU Payment Modules
 *
 * @copyright  Copyright 2015 by PayU
@@ -20,9 +20,9 @@ class ControllerPaymentPayU extends Controller
 
     const PAY_BUTTON = 'https://static.payu.com/pl/standard/partners/buttons/payu_account_button_01.png';
 
-    const VERSION = '3.0.1';
+    const VERSION = '3.1.0-DEV';
 
-    protected $vouchersAmount = 0.0;
+    private $ocr = array();
 
     //loading PayU SDK
     private function loadLibConfig()
@@ -172,152 +172,84 @@ class ControllerPaymentPayU extends Controller
     private function buildOrder()
     {
 
-        $OCRV2 = array();
-
         $this->language->load('payment/payu');
         $this->load->model('payment/payu');
         $this->loadLibConfig();
 
+        //get order info
         $this->load->model('checkout/order');
         $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
-        $this->load->model('localisation/country');
-        $this->tax->setShippingAddress($order_info['shipping_country_id'], $order_info['shipping_zone_id']);
-        $this->tax->setPaymentAddress($order_info['payment_country_id'], $order_info['payment_zone_id']);
-        $this->tax->setStoreAddress($this->config->get('config_country_id'), $this->config->get('config_zone_id'));
-        $grandTotal = 0;
-        $orderType = 'VIRTUAL';
-        $shippingCostAmount = 0.0;
 
-        $decimalPlace = $this->currency->getDecimalPlace();
+        //OCR basic data
+        $this->ocr['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
+        $this->ocr['orderUrl'] = $this->url->link('payment/payu/callback') . '?order=' . $order_info['order_id'];
+        $this->ocr['description'] = $this->language->get('text_payu_order') . ' #' . $order_info['order_id'];
+        $this->ocr['customerIp'] = $this->getIP($order_info['ip']);
+        $this->ocr['notifyUrl'] = $this->url->link('payment/payu/ordernotify');
+        $this->ocr['continueUrl'] = $this->url->link('checkout/success');
+        $this->ocr['currencyCode'] = $order_info['currency_code'];
+        $this->ocr['totalAmount'] = $this->toAmount($order_info['total']);
+        $this->ocr['extOrderId'] = uniqid($order_info['order_id'].'-', true);
+        $this->ocr['settings']['invoiceDisabled'] = true;
 
+        //OCR customer data
+        $this->buildCustomerInOrder($order_info);
 
-        if (!empty($this->session->data['vouchers'])) {
-            foreach ($this->session->data['vouchers'] as $voucher) {
-                $this->vouchersAmount += $this->currency->format($voucher['amount']);
-                $OCRV2['products'] [] = array(
-                    'quantity' => 1,
-                    'name' => $voucher['description'],
-                    'unitPrice' => $this->toAmount($voucher['amount'])
-                );
-            }
+        //OCR products
+        $this->buildProductsInOrder($this->cart->getProducts(), $order_info['currency_code']);
+
+        //OCR shipping
+        if ($this->cart->hasShipping()) {
+            $this->buildShippingInOrder($this->session->data['shipping_method']);
         }
 
-        foreach ($this->cart->getProducts() as $item) {
+        return $this->ocr;
 
-            list($productOrderType, $OCRV2, $grandTotal) = $this->prepareProductsSection(
-                $decimalPlace,
-                $item,
-                $order_info,
-                $OCRV2,
-                $grandTotal
-            );
-        }
+    }
 
-        if ($productOrderType == 'MATERIAL') {
-            $orderType = $productOrderType;
-        }
-
-        $OCReq = array(
-            'ReqId' => md5(rand()),
-            'CustomerIp' => (($order_info['ip'] == "::1" || $order_info['ip'] == "::" || !preg_match(
-                    "/^((?:25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9]).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])$/m",
-                    $order_info['ip']
-                )) ? '127.0.0.1' : $order_info['ip']),
-            // note, this should be real ip of customer retrieved from $_SERVER['REMOTE_ADDR']
-            'NotifyUrl' => $this->url->link('payment/payu/ordernotify'),
-            'OrderCompleteUrl' => $this->url->link('checkout/success')
-        );
-
-        $customer = array();
-
+    /**
+     * @param array $order_info
+     */
+    private function buildCustomerInOrder($order_info)
+    {
 
         if (!empty($order_info['email'])) {
-
-            $customer = array(
+            $this->ocr['buyer'] = array(
                 'email' => $order_info['email'],
                 'firstName' => $order_info['firstname'],
                 'lastName' => $order_info['lastname'],
                 'phone' => $order_info['telephone']
             );
-
-        } elseif (!empty($this->session->data['customer_id'])) {
-
-            $this->load->model('account\customer');
-            $custdata = $this->model_account_customer->getCustomer($this->session['customer_id']);
-
-            if (!empty($custdata['email'])) {
-
-                $customer = array(
-                    'email' => $custdata['email'],
-                    'firstName' => $custdata['firstname'],
-                    'lastName' => $custdata['lastname'],
-                    'phone' => $custdata['telephone']
-                );
-            }
         }
+    }
 
-        if ($orderType == 'MATERIAL') {
+    /**
+     * @param array $products
+     */
+    private function buildProductsInOrder($products, $currencyCode)
+    {
+        foreach ($products as $item) {
+            $gross = $this->tax->calculate($item['price'], $item['tax_class_id']);
+            $itemGross = number_format($this->currency->format($gross, $currencyCode, '', false) * 100, 0, '', '');
 
-            if (!empty($customer) && !empty($order_info['shipping_city']) && !empty($order_info['shipping_postcode']) && !empty($order_info['payment_iso_code_2'])) {
-
-                $customer['delivery'] = array(
-                    'street' => $order_info['shipping_address_1'] . " " . ($order_info['shipping_address_2'] ? $order_info['shipping_address_2'] : ''),
-                    'postalCode' => $order_info['shipping_postcode'],
-                    'city' => $order_info['shipping_city'],
-                    'countryCode' => $order_info['payment_iso_code_2'],
-                    'recipientName' => $order_info['shipping_firstname'] . " " . $order_info['shipping_lastname'],
-                    'recipientPhone' => $order_info['telephone'],
-                    'recipientEmail' => $order_info['email']
-                );
-            }
-
-            if (!empty($order_info['shipping_method'])) {
-                list($shippingCostList, $shippingCostAmount) = $this->prepareShippingMethodsSection(
-                    $decimalPlace,
-                    $order_info
-                );
-            }
-
-        }
-
-        if (isset($this->session->data['coupon']) || !empty($this->session->data['coupon'])) {
-            $OCRV2 = $this->prepareCumulatedProductsArray(
-                $OCRV2,
-                $order_info,
-                $shippingCostAmount,
-                $this->language->get('text_payu_order')
+            $this->ocr['products'][] = array(
+                'quantity' => $item['quantity'],
+                'name' => $item['name'],
+                'unitPrice' => $itemGross
             );
         }
+    }
 
-        $OCRV2['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
-        $OCRV2['orderUrl'] = $this->url->link('payment/payu/callback') . '?order=' . $this->session->data['order_id'];
-        $OCRV2['description'] = $this->language->get('text_payu_order') . ' #' . $this->session->data['order_id'];
-        $OCRV2['customerIp'] = $OCReq['CustomerIp'];
-        $OCRV2['notifyUrl'] = $OCReq['NotifyUrl'];
-        $OCRV2['continueUrl'] = $OCReq['OrderCompleteUrl'];
-        $OCRV2['currencyCode'] = $order_info['currency_code'];
-        $OCRV2['settings']['invoiceDisabled'] = true;
-
-        $total = $order_info['total'];
-
-        if (empty($decimalPlace)) {
-            $total = $this->toAmount($total);
-        }
-
-        $total = str_ireplace(
-            array('.', ' '),
-            array('', ''),
-            $this->currency->format($total - $shippingCostAmount, $order_info['currency_code'], false, false)
-        );
-
-        $OCRV2['totalAmount'] = $total;
-        $OCRV2['extOrderId'] = $this->session->data['order_id'] . '-' . md5(microtime());
-        if (isset($shippingCostList)) {
-            $OCRV2['shippingMethods'] = $shippingCostList['shippingMethods'];
-        }
-        $OCRV2['buyer'] = $customer;
-
-        return $OCRV2;
+    /**
+     * @param array $shippingMethod
+     */
+    private function buildShippingInOrder($shippingMethod)
+    {
+           $this->ocr['products'][] = array(
+                'quantity' => 1,
+                'name' => $shippingMethod['title'],
+                'unitPrice' => $this->toAmount($shippingMethod['cost'])
+            );
 
     }
 
@@ -329,107 +261,14 @@ class ControllerPaymentPayU extends Controller
      */
     private function toAmount($value)
     {
-        $val = $value * 100;
-        $round = (int)round($val);
-
-        return $round;
+        return number_format($value * 100, 0, '', '');
     }
 
-    /**
-     * @param $OCRV2
-     * @param $order_info
-     * @param $shippingCostAmount
-     * @param $txt_prefix
-     * @return mixed
-     */
-    private function prepareCumulatedProductsArray($OCRV2, $order_info, $shippingCostAmount, $txt_prefix)
+    private function getIP($orderIP)
     {
-        unset($OCRV2['products']);
-        $OCRV2['products'] = array();
-        $totalProducts = str_ireplace(
-            array('.', ' '),
-            array('', ''),
-            $this->currency->format(
-                $this->toAmount((int)($order_info['total'])) - $shippingCostAmount,
-                $order_info['currency_code'],
-                false,
-                false
-            )
-        );
-        $OCRV2['products'] [] = array(
-            'quantity' => 1,
-            'name' => $txt_prefix . ':' . $this->session->data['order_id'],
-            'unitPrice' => $totalProducts
-        );
-
-        return $OCRV2;
-    }
-
-    /**
-     * @param $decimalPlace
-     * @param $order_info
-     * @return array
-     */
-    private function prepareShippingMethodsSection($decimalPlace, $order_info)
-    {
-        $shippingCostList = array();
-        $shippingCost = $shippingCostAmount = $this->session->data['shipping_method']['cost'];
-
-        if (empty($decimalPlace)) {
-            $shippingCost *= 100;
-            $shippingCostAmount = $shippingCost;
-        }
-
-        $price = $this->currency->format(
-            $this->tax->calculate(
-                $shippingCost,
-                $this->session->data['shipping_method']['tax_class_id']
-            )
-        );
-
-        $price = preg_replace("/[^0-9]/", "", $price);
-
-        $shippingCostList ['shippingMethods'] [] = array(
-            'name' => $order_info['shipping_method'],
-            'country' => $order_info['payment_iso_code_2'],
-            'price' => $price
-        );
-
-        return array($shippingCostList, $shippingCostAmount);
-    }
-
-    /**
-     * @param $decimalPlace
-     * @param $item
-     * @param $order_info
-     * @param $OCRV2
-     * @param $grandTotal
-     * @return array
-     */
-    private function prepareProductsSection($decimalPlace, $item, $order_info, $OCRV2, $grandTotal)
-    {
-        if (empty($decimalPlace)) {
-            $item['price'] *= 100;
-        }
-
-        $gross = $this->tax->calculate($item['price'], $item['tax_class_id']);
-
-        $orderType = $item['shipping'] == 1 ? 'MATERIAL' : 'VIRTUAL';
-
-        $itemGross = str_ireplace(
-            array('.', ' '),
-            array('', ''),
-            $this->currency->format($gross, $order_info['currency_code'], false, false)
-        );
-
-        $OCRV2['products'] [] = array(
-            'quantity' => $item['quantity'],
-            'name' => $item['name'],
-            'unitPrice' => $itemGross
-        );
-
-        $grandTotal += $itemGross * $item['quantity'];
-
-        return array($orderType, $OCRV2, $grandTotal);
+        return $orderIP == "::1"
+            || $orderIP == "::"
+            || !preg_match("/^((?:25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9]).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])$/m", $orderIP)
+                ? '127.0.0.1' : $orderIP;
     }
 }
