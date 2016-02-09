@@ -14,10 +14,6 @@ $_['heading_title'] = 'PayU';
 
 // Text
 $_['text_title'] = 'PayU';
-$_['text_payu_product_id'] = 'Numer produktu';
-$_['text_payu_model'] = 'Model:';
 $_['text_payu_order'] = 'Zamówienie';
-$_['text_payu_including_all_taxes'] = 'brutto';
-$_['text_payu_none'] = 'brak';
-$_['text_payu_no_shipping'] = 'Wysyłka niewymagana';
+$_['text_payu_discount'] = 'Rabat';
 $_['text_error_message'] = 'Nie udało się utworzyć zamówienia w Systemie PayU. Proszę spróbować ponownie lub skontaktować się z obsługą sklepu.';

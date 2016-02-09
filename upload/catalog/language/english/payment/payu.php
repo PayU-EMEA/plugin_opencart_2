@@ -14,10 +14,6 @@ $_['heading_title'] = 'PayU';
 
 // Text
 $_['text_title'] = 'PayU';
-$_['text_payu_product_id'] = 'product #';
-$_['text_payu_model'] = 'Model:';
 $_['text_payu_order'] = 'Order';
-$_['text_payu_including_all_taxes'] = 'including all taxes';
-$_['text_payu_none'] = 'none';
-$_['text_payu_no_shipping'] = 'No Shipping Required';
+$_['text_payu_discount'] = 'Discount';
 $_['text_error_message'] = 'Something went wrong. You can not order by PayU.';

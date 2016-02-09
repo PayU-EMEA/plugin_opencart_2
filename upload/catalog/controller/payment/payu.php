@@ -23,6 +23,7 @@ class ControllerPaymentPayU extends Controller
     const VERSION = '3.1.0-DEV';
 
     private $ocr = array();
+    private $totalWithoutDiscount = 0;
 
     //loading PayU SDK
     private function loadLibConfig()
@@ -188,7 +189,7 @@ class ControllerPaymentPayU extends Controller
         $this->ocr['notifyUrl'] = $this->url->link('payment/payu/ordernotify');
         $this->ocr['continueUrl'] = $this->url->link('checkout/success');
         $this->ocr['currencyCode'] = $order_info['currency_code'];
-        $this->ocr['totalAmount'] = $this->toAmount($order_info['total']);
+        $this->ocr['totalAmount'] = $this->toAmount($this->currencyFormat($order_info['total']));
         $this->ocr['extOrderId'] = uniqid($order_info['order_id'].'-', true);
         $this->ocr['settings']['invoiceDisabled'] = true;
 
@@ -201,6 +202,10 @@ class ControllerPaymentPayU extends Controller
         //OCR shipping
         if ($this->cart->hasShipping()) {
             $this->buildShippingInOrder($this->session->data['shipping_method']);
+        }
+
+        if ($this->ocr['totalAmount'] < $this->totalWithoutDiscount) {
+            $this->buildDiscountInOrder($this->ocr['totalAmount']);
         }
 
         return $this->ocr;
@@ -229,15 +234,32 @@ class ControllerPaymentPayU extends Controller
     private function buildProductsInOrder($products, $currencyCode)
     {
         foreach ($products as $item) {
-            $gross = $this->tax->calculate($item['price'], $item['tax_class_id']);
-            $itemGross = number_format($this->currency->format($gross, $currencyCode, '', false) * 100, 0, '', '');
+
+            $gross = $this->currencyFormat($this->tax->calculate($item['price'], $item['tax_class_id'], $this->config->get('config_tax')));
+            $itemGross = $this->toAmount($gross);
 
             $this->ocr['products'][] = array(
                 'quantity' => $item['quantity'],
                 'name' => $item['name'],
                 'unitPrice' => $itemGross
             );
+
+            $this->totalWithoutDiscount += $itemGross;
         }
+    }
+
+
+    /**
+     * @param int $total
+     */
+    private function buildDiscountInOrder($total)
+    {
+            $this->ocr['products'][] = array(
+                'quantity' => 1,
+                'name' => $this->language->get('text_payu_discount'),
+                'unitPrice' => $total - $this->totalWithoutDiscount
+            );
+
     }
 
     /**
@@ -245,12 +267,13 @@ class ControllerPaymentPayU extends Controller
      */
     private function buildShippingInOrder($shippingMethod)
     {
-           $this->ocr['products'][] = array(
-                'quantity' => 1,
-                'name' => $shippingMethod['title'],
-                'unitPrice' => $this->toAmount($shippingMethod['cost'])
-            );
-
+        $itemGross = $this->toAmount($this->currencyFormat($shippingMethod['cost']));
+        $this->ocr['products'][] = array(
+            'quantity' => 1,
+            'name' => $shippingMethod['title'],
+            'unitPrice' => $itemGross
+        );
+        $this->totalWithoutDiscount += $itemGross;
     }
 
     /**
@@ -262,6 +285,17 @@ class ControllerPaymentPayU extends Controller
     private function toAmount($value)
     {
         return number_format($value * 100, 0, '', '');
+    }
+
+    /**
+     * Currency format
+     *
+     * @param float $value
+     * @return float
+     */
+    private function currencyFormat($value)
+    {
+        return $this->currency->format($value, '', '', false);
     }
 
     private function getIP($orderIP)
