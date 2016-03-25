@@ -1,13 +1,12 @@
 <?php
 
 /*
-* ver. 3.1.0
+* ver. 3.1.1
 * PayU Payment Modules
 *
-* @copyright  Copyright 2015 by PayU
+* @copyright  Copyright 2016 by PayU
 * @license    http://opensource.org/licenses/GPL-3.0  Open Software License (GPL 3.0)
 * http://www.payu.com
-* http://twitter.com/openpayu
 */
 
 class ControllerPaymentPayU extends Controller
@@ -20,7 +19,7 @@ class ControllerPaymentPayU extends Controller
 
     const PAY_BUTTON = 'https://static.payu.com/pl/standard/partners/buttons/payu_account_button_01.png';
 
-    const VERSION = '3.1.0';
+    const VERSION = '3.1.1';
 
     private $ocr = array();
     private $totalWithoutDiscount = 0;
@@ -34,7 +33,7 @@ class ControllerPaymentPayU extends Controller
         OpenPayU_Configuration::setSignatureKey($this->config->get('payu_signaturekey'));
         OpenPayU_Configuration::setEnvironment();
         OpenPayU_Configuration::setApiVersion(2.1);
-        OpenPayU_Configuration::setSender('OpenCart ver ' . VERSION . ' / Plugin ver '.self::VERSION);
+        OpenPayU_Configuration::setSender('OpenCart ver ' . VERSION . ' / Plugin ver ' . self::VERSION);
         $this->logger = new Log('payu.log');
     }
 
@@ -43,10 +42,14 @@ class ControllerPaymentPayU extends Controller
         $data['payu_button'] = self::PAY_BUTTON;
         $data['action'] = $this->url->link('payment/payu/pay');
 
-        if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/payment/payu.tpl')) {
-            return $this->load->view($this->config->get('config_template') . '/template/payment/payu.tpl', $data);
+        if ($this->isVersion22()) {
+            return $this->load->view('payment/payu', $data);
         } else {
-            return $this->load->view('default/template/payment/payu.tpl', $data);
+            if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/payment/payu.tpl')) {
+                return $this->load->view($this->config->get('config_template') . '/template/payment/payu.tpl', $data);
+            } else {
+                return $this->load->view('default/template/payment/payu.tpl', $data);
+            }
         }
     }
 
@@ -169,7 +172,6 @@ class ControllerPaymentPayU extends Controller
         return false;
     }
 
-    //building order for express checkout
     private function buildOrder()
     {
 
@@ -189,8 +191,10 @@ class ControllerPaymentPayU extends Controller
         $this->ocr['notifyUrl'] = $this->url->link('payment/payu/ordernotify');
         $this->ocr['continueUrl'] = $this->url->link('checkout/success');
         $this->ocr['currencyCode'] = $order_info['currency_code'];
-        $this->ocr['totalAmount'] = $this->toAmount($this->currencyFormat($order_info['total']));
-        $this->ocr['extOrderId'] = uniqid($order_info['order_id'].'-', true);
+        $this->ocr['totalAmount'] = $this->toAmount(
+            $this->currencyFormat($order_info['total'], $order_info['currency_code'])
+        );
+        $this->ocr['extOrderId'] = uniqid($order_info['order_id'] . '-', true);
         $this->ocr['settings']['invoiceDisabled'] = true;
 
         //OCR customer data
@@ -201,7 +205,7 @@ class ControllerPaymentPayU extends Controller
 
         //OCR shipping
         if ($this->cart->hasShipping()) {
-            $this->buildShippingInOrder($this->session->data['shipping_method']);
+            $this->buildShippingInOrder($this->session->data['shipping_method'], $order_info['currency_code']);
         }
 
         if ($this->ocr['totalAmount'] < $this->totalWithoutDiscount) {
@@ -235,7 +239,10 @@ class ControllerPaymentPayU extends Controller
     {
         foreach ($products as $item) {
 
-            $gross = $this->currencyFormat($this->tax->calculate($item['price'], $item['tax_class_id'], $this->config->get('config_tax')));
+            $gross = $this->currencyFormat(
+                $this->tax->calculate($item['price'], $item['tax_class_id'], $this->config->get('config_tax')),
+                $currencyCode
+            );
             $itemGross = $this->toAmount($gross);
 
             $this->ocr['products'][] = array(
@@ -254,20 +261,20 @@ class ControllerPaymentPayU extends Controller
      */
     private function buildDiscountInOrder($total)
     {
-            $this->ocr['products'][] = array(
-                'quantity' => 1,
-                'name' => $this->language->get('text_payu_discount'),
-                'unitPrice' => $total - $this->totalWithoutDiscount
-            );
+        $this->ocr['products'][] = array(
+            'quantity' => 1,
+            'name' => $this->language->get('text_payu_discount'),
+            'unitPrice' => $total - $this->totalWithoutDiscount
+        );
 
     }
 
     /**
      * @param array $shippingMethod
      */
-    private function buildShippingInOrder($shippingMethod)
+    private function buildShippingInOrder($shippingMethod, $currencyCode)
     {
-        $itemGross = $this->toAmount($this->currencyFormat($shippingMethod['cost']));
+        $itemGross = $this->toAmount($this->currencyFormat($shippingMethod['cost'], $currencyCode));
         $this->ocr['products'][] = array(
             'quantity' => 1,
             'name' => $shippingMethod['title'],
@@ -293,16 +300,24 @@ class ControllerPaymentPayU extends Controller
      * @param float $value
      * @return float
      */
-    private function currencyFormat($value)
+    private function currencyFormat($value, $currencyCode)
     {
-        return $this->currency->format($value, '', '', false);
+        return $this->currency->format($value, $currencyCode, '', false);
     }
 
     private function getIP($orderIP)
     {
         return $orderIP == "::1"
-            || $orderIP == "::"
-            || !preg_match("/^((?:25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9]).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])$/m", $orderIP)
-                ? '127.0.0.1' : $orderIP;
+        || $orderIP == "::"
+        || !preg_match(
+            "/^((?:25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9]).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])$/m",
+            $orderIP
+        )
+            ? '127.0.0.1' : $orderIP;
+    }
+
+    private function isVersion22()
+    {
+        return version_compare(VERSION, '2.2', '>=');
     }
 }

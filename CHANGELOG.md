@@ -1,3 +1,6 @@
+## 3.1.1
+* Add 2.2.x.x compatibility 
+
 ##3.1.0
 * Update PayU SDK
 * Refactor payment controller
