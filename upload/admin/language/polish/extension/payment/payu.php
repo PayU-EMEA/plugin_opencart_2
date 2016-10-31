@@ -21,6 +21,8 @@ $_['text_edit'] = 'Edytuj PayU';
 // Entry
 $_['entry_merchantposid'] = 'Id punktu płatności';
 $_['entry_signaturekey'] = 'Drugi klucz (MD5)';
+$_['entry_oauth_client_id'] = 'Protokół OAuth - client_id';
+$_['entry_oauth_client_secret'] = 'Protokół OAuth - client_secret';
 $_['entry_status'] = 'Status';
 $_['entry_sort_order'] = 'Kolejność';
 $_['entry_complete_status'] = 'Status powiadomienia PayU: Completed';
@@ -32,11 +34,11 @@ $_['entry_total'] = 'Suma zamówienia';
 $_['entry_geo_zone'] = 'Strefa Geo';
 
 // Help
-$_['help_merchantposid'] = 'OAuth protocol - client_id';
-$_['help_signaturekey'] = 'Symetryczny klucz do szyfrowania komunikacji - secret key';
 $_['help_total'] = 'Ta metoda płatności będzie dostępna gdy wartość koszyka przekroczy tę wartość.';
 
 // Error
 $_['error_permission'] = "Uwaga: Brak uprawnień do modyfikacji modułu 'PayU'!";
-$_['error_merchantposid'] = 'Podanie Id punktu płatności jest wymagane!';
-$_['error_signaturekey'] = 'Podanie drugiego klucza wymagane!';
+$_['error_merchantposid'] = 'Podanie "Id punktu płatności" jest wymagane!';
+$_['error_signaturekey'] = 'Podanie "Drugi klucz (MD5)" jest wymagane!';
+$_['error_oauth_client_id'] = 'Podanie "OAuth - client_id" jest wymagane!';
+$_['error_oauth_client_secret'] = 'Podanie "OAuth - client_secret" wymagane!';

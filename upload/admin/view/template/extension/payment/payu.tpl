@@ -71,9 +71,9 @@
                     </div>
 
                     <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="input-merchantposid"><span data-toggle="tooltip" title="<?php echo $help_merchantposid; ?>"><?php echo $entry_merchantposid; ?></label>
+                        <label class="col-sm-2 control-label" for="input-merchantposid"> <?php echo $entry_merchantposid; ?></label>
                         <div class="col-sm-10">
-                            <input type="text" name="payu_merchantposid" value="<?php echo $payu_merchantposid; ?>" placeholder="<?php echo $help_merchantposid; ?>" id="input-merchantposid" class="form-control" />
+                            <input type="text" name="payu_merchantposid" value="<?php echo $payu_merchantposid; ?>" id="input-merchantposid" class="form-control" />
                             <?php if ($error_merchantposid) { ?>
                             <div class="text-danger"><?php echo $error_merchantposid; ?></div>
                             <?php } ?>
@@ -81,11 +81,31 @@
                     </div>
 
                     <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="input-signaturekey"><span data-toggle="tooltip" title="<?php echo $help_signaturekey; ?>"><?php echo $entry_signaturekey; ?></label>
+                        <label class="col-sm-2 control-label" for="input-signaturekey"><?php echo $entry_signaturekey; ?></label>
                         <div class="col-sm-10">
-                            <input type="text" name="payu_signaturekey" value="<?php echo $payu_signaturekey; ?>" placeholder="<?php echo $help_signaturekey; ?>" id="input-signaturekey" class="form-control" />
+                            <input type="text" name="payu_signaturekey" value="<?php echo $payu_signaturekey; ?>" id="input-signaturekey" class="form-control" />
                             <?php if ($error_signaturekey) { ?>
                             <div class="text-danger"><?php echo $error_signaturekey; ?></div>
+                            <?php } ?>
+                        </div>
+                    </div>
+
+                    <div class="form-group required">
+                        <label class="col-sm-2 control-label" for="input-oauth_client_id"><?php echo $entry_oauth_client_id; ?></label>
+                        <div class="col-sm-10">
+                            <input type="text" name="payu_oauth_client_id" value="<?php echo $payu_oauth_client_id; ?>" id="input-oauth_client_id" class="form-control" />
+                            <?php if ($error_oauth_client_id) { ?>
+                            <div class="text-danger"><?php echo $error_oauth_client_id; ?></div>
+                            <?php } ?>
+                        </div>
+                    </div>
+
+                    <div class="form-group required">
+                        <label class="col-sm-2 control-label" for="input-oauth_client_secret"> <?php echo $entry_oauth_client_secret; ?></label>
+                        <div class="col-sm-10">
+                            <input type="text" name="payu_oauth_client_secret" value="<?php echo $payu_oauth_client_secret; ?>" id="input-oauth_client_secret" class="form-control" />
+                            <?php if ($error_oauth_client_secret) { ?>
+                            <div class="text-danger"><?php echo $error_oauth_client_secret; ?></div>
                             <?php } ?>
                         </div>
                     </div>

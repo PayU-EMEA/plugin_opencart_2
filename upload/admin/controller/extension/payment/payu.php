@@ -7,7 +7,7 @@
 * http://www.payu.com
 * http://twitter.com/openpayu
 */
-class ControllerPaymentPayU extends Controller
+class ControllerExtensionPaymentPayU extends Controller
 {
     private $error = array();
     private $settings = array();
@@ -15,7 +15,7 @@ class ControllerPaymentPayU extends Controller
     //Config page
     public function index()
     {
-        $this->load->language('payment/payu');
+        $this->load->language('extension/payment/payu');
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('setting/setting');
 
@@ -23,7 +23,7 @@ class ControllerPaymentPayU extends Controller
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
             $this->model_setting_setting->editSetting('payu', $this->request->post);
             $this->session->data['success'] = $this->language->get('text_success');
-            $this->response->redirect($this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL'));
+            $this->response->redirect($this->url->link('extension/extension', 'token=' . $this->session->data['token'], true));
         }
 
         //language data
@@ -39,6 +39,8 @@ class ControllerPaymentPayU extends Controller
         $data['entry_currency'] = $this->language->get('entry_currency');
         $data['entry_merchantposid'] = $this->language->get('entry_merchantposid');
         $data['entry_signaturekey'] = $this->language->get('entry_signaturekey');
+        $data['entry_oauth_client_id'] = $this->language->get('entry_oauth_client_id');
+        $data['entry_oauth_client_secret'] = $this->language->get('entry_oauth_client_secret');
         $data['entry_status'] = $this->language->get('entry_status');
         $data['entry_sort_order'] = $this->language->get('entry_sort_order');
         $data['entry_complete_status'] = $this->language->get('entry_complete_status');
@@ -51,14 +53,14 @@ class ControllerPaymentPayU extends Controller
         $data['entry_total'] = $this->language->get('entry_total');
         $data['entry_geo_zone'] = $this->language->get('entry_geo_zone');
 
-        $data['help_merchantposid'] = $this->language->get('help_merchantposid');
-        $data['help_signaturekey'] = $this->language->get('help_signaturekey');
         $data['help_total'] = $this->language->get('help_total');
 
         //Errors
         $data['error_warning'] = isset($this->error['warning']) ? $this->error['warning'] : '';
         $data['error_signaturekey'] = isset($this->error['signaturekey']) ? $this->error['signaturekey'] : '';
         $data['error_merchantposid'] = isset($this->error['merchantposid']) ? $this->error['merchantposid'] : '';
+        $data['error_oauth_client_id'] = isset($this->error['oauth_client_id']) ? $this->error['oauth_client_id'] : '';
+        $data['error_oauth_client_secret'] = isset($this->error['oauth_client_secret']) ? $this->error['oauth_client_secret'] : '';
 
         //Zones, order statuses
         $this->load->model('localisation/geo_zone');
@@ -78,6 +80,12 @@ class ControllerPaymentPayU extends Controller
 
         $data['payu_merchantposid'] = isset($this->request->post['payu_merchantposid']) ?
             $this->request->post['payu_merchantposid'] : $this->config->get('payu_merchantposid');
+
+        $data['payu_oauth_client_id'] = isset($this->request->post['payu_oauth_client_id']) ?
+            $this->request->post['payu_oauth_client_id'] : $this->config->get('payu_oauth_client_id');
+
+        $data['payu_oauth_client_secret'] = isset($this->request->post['payu_oauth_client_secret']) ?
+            $this->request->post['payu_oauth_client_secret'] : $this->config->get('payu_oauth_client_secret');
 
         $data['payu_status'] = isset($this->request->post['payu_status']) ?
             $this->request->post['payu_status'] : $this->config->get('payu_status');
@@ -106,27 +114,29 @@ class ControllerPaymentPayU extends Controller
         $data['breadcrumbs'] = array();
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_home'),
-            'href' => $this->url->link('common/home', 'token=' . $this->session->data['token'], 'SSL')
+            'href' => $this->url->link('common/home', 'token=' . $this->session->data['token'], true)
         );
+
         $data['breadcrumbs'][] = array(
-            'text' => $this->language->get('text_payment'),
-            'href' => $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL')
+            'text' => $this->language->get('text_extension'),
+            'href' => $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true)
         );
+
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('heading_title'),
-            'href' => $this->url->link('payment/payu', 'token=' . $this->session->data['token'], 'SSL')
+            'href' => $this->url->link('extension/payment/payu', 'token=' . $this->session->data['token'], true)
         );
 
         //links
-        $data['action'] = $this->url->link('payment/payu', 'token=' . $this->session->data['token'], 'SSL');
-        $data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL');
+        $data['action'] = $this->url->link('extension/payment/payu', 'token=' . $this->session->data['token'], true);
+        $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'], true);
 
 
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
 
-        $this->response->setOutput($this->load->view('payment/payu.tpl', $data));
+        $this->response->setOutput($this->load->view('extension/payment/payu', $data));
 
     } //index
 
@@ -135,7 +145,7 @@ class ControllerPaymentPayU extends Controller
     private function validate()
     {
         //permisions
-        if (!$this->user->hasPermission('modify', 'payment/payu')) {
+        if (!$this->user->hasPermission('modify', 'extension/payment/payu')) {
             $this->error['warning'] = $this->language->get('error_permission');
         }
         //check for errors
@@ -145,13 +155,19 @@ class ControllerPaymentPayU extends Controller
         if (!$this->request->post['payu_merchantposid']) {
             $this->error['merchantposid'] = $this->language->get('error_merchantposid');
         }
+        if (!$this->request->post['payu_oauth_client_id']) {
+            $this->error['oauth_client_id'] = $this->language->get('error_oauth_client_id');
+        }
+        if (!$this->request->post['payu_oauth_client_secret']) {
+            $this->error['oauth_client_secret'] = $this->language->get('error_oauth_client_secret');
+        }
 
         return !$this->error;
     }
 
     public function install()
     {
-        $this->load->model('payment/payu');
+        $this->load->model('extension/payment/payu');
         $this->load->model('setting/setting');
 
         $this->settings = array(
@@ -164,16 +180,16 @@ class ControllerPaymentPayU extends Controller
             'payu_sort_order' => 1,
         );
         $this->model_setting_setting->editSetting('payu', $this->settings);
-        $this->model_payment_payu->createDatabaseTables();
+        $this->model_extension_payment_payu->createDatabaseTables();
     }
 
     public function uninstall()
     {
-        $this->load->model('payment/payu');
+        $this->load->model('extension/payment/payu');
         $this->load->model('setting/setting');
 
         $this->model_setting_setting->deleteSetting('payu');
-        $this->model_payment_payu->dropDatabaseTables();
+        $this->model_extension_payment_payu->dropDatabaseTables();
     }
 
 }

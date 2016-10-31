@@ -9,17 +9,11 @@
 * http://www.payu.com
 */
 
-class ControllerPaymentPayU extends Controller
+class ControllerExtensionPaymentPayU extends Controller
 {
-    const ORDER_V2_PENDING = 'PENDING';
-    const ORDER_V2_CANCELED = 'CANCELED';
-    const ORDER_V2_REJECTED = 'REJECTED';
-    const ORDER_V2_COMPLETED = 'COMPLETED';
-    const ORDER_V2_WAITING_FOR_CONFIRMATION = 'WAITING_FOR_CONFIRMATION';
-
     const PAY_BUTTON = 'https://static.payu.com/pl/standard/partners/buttons/payu_account_button_01.png';
 
-    const VERSION = '3.1.1';
+    const VERSION = '3.2.0';
 
     private $ocr = array();
     private $totalWithoutDiscount = 0;
@@ -31,8 +25,9 @@ class ControllerPaymentPayU extends Controller
 
         OpenPayU_Configuration::setMerchantPosId($this->config->get('payu_merchantposid'));
         OpenPayU_Configuration::setSignatureKey($this->config->get('payu_signaturekey'));
+        OpenPayU_Configuration::setOauthClientId($this->config->get('payu_oauth_client_id'));
+        OpenPayU_Configuration::setOauthClientSecret($this->config->get('payu_oauth_client_secret'));
         OpenPayU_Configuration::setEnvironment();
-        OpenPayU_Configuration::setApiVersion(2.1);
         OpenPayU_Configuration::setSender('OpenCart ver ' . VERSION . ' / Plugin ver ' . self::VERSION);
         $this->logger = new Log('payu.log');
     }
@@ -40,25 +35,17 @@ class ControllerPaymentPayU extends Controller
     public function index()
     {
         $data['payu_button'] = self::PAY_BUTTON;
-        $data['action'] = $this->url->link('payment/payu/pay');
+        $data['action'] = $this->url->link('extension/payment/payu/pay');
 
-        if ($this->isVersion22()) {
-            return $this->load->view('payment/payu', $data);
-        } else {
-            if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/payment/payu.tpl')) {
-                return $this->load->view($this->config->get('config_template') . '/template/payment/payu.tpl', $data);
-            } else {
-                return $this->load->view('default/template/payment/payu.tpl', $data);
-            }
-        }
+        return $this->load->view('extension/payment/payu', $data);
     }
 
     public function pay()
     {
         if ($this->session->data['payment_method']['code'] == 'payu') {
-            $this->language->load('payment/payu');
+            $this->language->load('extension/payment/payu');
             $this->load->model('checkout/order');
-            $this->load->model('payment/payu');
+            $this->load->model('extension/payment/payu');
 
             //OCR
             $this->loadLibConfig();
@@ -70,7 +57,7 @@ class ControllerPaymentPayU extends Controller
 
                 if ($response->getStatus() == 'SUCCESS') {
                     $this->session->data['sessionId'] = $response->getResponse()->orderId;
-                    $this->model_payment_payu->bindOrderIdAndSessionId(
+                    $this->model_extension_payment_payu->bindOrderIdAndSessionId(
                         $this->session->data['order_id'],
                         $this->session->data['sessionId']
                     );
@@ -107,8 +94,9 @@ class ControllerPaymentPayU extends Controller
     //Notification
     public function ordernotify()
     {
+
         $this->loadLibConfig();
-        $this->load->model('payment/payu');
+        $this->load->model('extension/payment/payu');
         $this->load->model('checkout/order');
 
         $body = file_get_contents('php://input');
@@ -120,7 +108,7 @@ class ControllerPaymentPayU extends Controller
             }
 
             if ($session_id = $result->getResponse()->order->orderId) {
-                $orderInfo = $this->model_payment_payu->getOrderInfoBySessionId($session_id);
+                $orderInfo = $this->model_extension_payment_payu->getOrderInfoBySessionId($session_id);
                 $orderRetrive = OpenPayU_Order::retrieve($session_id);
 
                 if ($orderRetrive->getStatus() != 'SUCCESS') {
@@ -129,11 +117,11 @@ class ControllerPaymentPayU extends Controller
                     );
                 } else {
 
-                    if ($orderInfo['status'] != self::ORDER_V2_COMPLETED) {
+                    if ($orderInfo['status'] != OpenPayuOrderStatus::STATUS_COMPLETED) {
                         $newstatus = $this->getPaymentStatusId($orderRetrive->getResponse()->orders[0]->status);
 
                         if ($newstatus && $newstatus != $orderInfo['status']) {
-                            $this->model_payment_payu->updateSatatus($session_id, $newstatus);
+                            $this->model_extension_payment_payu->updateSatatus($session_id, $newstatus);
                             $this->model_checkout_order->addOrderHistory($orderInfo['order_id'], $newstatus);
                         }
 
@@ -150,19 +138,19 @@ class ControllerPaymentPayU extends Controller
     //Getting system status
     private function getPaymentStatusId($paymentStatus)
     {
-        $this->load->model('payment/payu');
+        $this->load->model('extension/payment/payu');
         if (!empty($paymentStatus)) {
 
             switch ($paymentStatus) {
-                case self::ORDER_V2_CANCELED :
+                case OpenPayuOrderStatus::STATUS_CANCELED :
                     return $this->config->get('payu_cancelled_status');
-                case self::ORDER_V2_PENDING :
+                case OpenPayuOrderStatus::STATUS_PENDING :
                     return $this->config->get('payu_pending_status');
-                case self::ORDER_V2_WAITING_FOR_CONFIRMATION :
+                case OpenPayuOrderStatus::STATUS_WAITING_FOR_CONFIRMATION :
                     return $this->config->get('payu_waiting_for_confirmation_status');
-                case self::ORDER_V2_REJECTED :
+                case OpenPayuOrderStatus::STATUS_REJECTED :
                     return $this->config->get('payu_returned_status');
-                case self::ORDER_V2_COMPLETED :
+                case OpenPayuOrderStatus::STATUS_COMPLETED :
                     return $this->config->get('payu_complete_status');
                 default:
                     return false;
@@ -175,8 +163,8 @@ class ControllerPaymentPayU extends Controller
     private function buildOrder()
     {
 
-        $this->language->load('payment/payu');
-        $this->load->model('payment/payu');
+        $this->language->load('extension/payment/payu');
+        $this->load->model('extension/payment/payu');
         $this->loadLibConfig();
 
         //get order info
@@ -185,10 +173,10 @@ class ControllerPaymentPayU extends Controller
 
         //OCR basic data
         $this->ocr['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
-        $this->ocr['orderUrl'] = $this->url->link('payment/payu/callback') . '?order=' . $order_info['order_id'];
+        $this->ocr['orderUrl'] = $this->url->link('extension/payment/payu/callback') . '?order=' . $order_info['order_id'];
         $this->ocr['description'] = $this->language->get('text_payu_order') . ' #' . $order_info['order_id'];
         $this->ocr['customerIp'] = $this->getIP($order_info['ip']);
-        $this->ocr['notifyUrl'] = $this->url->link('payment/payu/ordernotify');
+        $this->ocr['notifyUrl'] = $this->url->link('extension/payment/payu/ordernotify');
         $this->ocr['continueUrl'] = $this->url->link('checkout/success');
         $this->ocr['currencyCode'] = $order_info['currency_code'];
         $this->ocr['totalAmount'] = $this->toAmount(
@@ -316,8 +304,4 @@ class ControllerPaymentPayU extends Controller
             ? '127.0.0.1' : $orderIP;
     }
 
-    private function isVersion22()
-    {
-        return version_compare(VERSION, '2.2', '>=');
-    }
 }

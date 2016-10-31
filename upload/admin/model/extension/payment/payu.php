@@ -8,7 +8,7 @@
 * http://twitter.com/openpayu
 */
 
-class ModelPaymentPayu extends Model
+class ModelExtensionPaymentPayu extends Model
 {
 
     public function createDatabaseTables()

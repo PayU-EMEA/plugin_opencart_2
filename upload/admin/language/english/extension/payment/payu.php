@@ -21,6 +21,8 @@ $_['text_edit'] = 'Edit PayU';
 // Entry
 $_['entry_merchantposid'] = 'POS ID';
 $_['entry_signaturekey'] = 'Second key (MD5)';
+$_['entry_oauth_client_id'] = 'OAuth protocol - client_id';
+$_['entry_oauth_client_secret'] = 'OAuth protocol - client_secret';
 $_['entry_status'] = 'Status';
 $_['entry_sort_order'] = 'Sort Order';
 $_['entry_complete_status'] = 'PayU Notifications Status: Completed';
@@ -32,11 +34,11 @@ $_['entry_total'] = 'Total';
 $_['entry_geo_zone'] = 'Geo Zone';
 
 // Help
-$_['help_merchantposid'] = 'OAuth protocol - client_id';
-$_['help_signaturekey'] = 'Symmetrical key for encrypting communication - secret key';
 $_['help_total'] = 'The checkout total the order must reach before this payment method becomes active.';
 
 // Error
 $_['error_permission'] = 'Warning: You do not have permission to modify module PayU !';
-$_['error_merchantposid'] = '* POS ID: Required!';
-$_['error_signaturekey'] = 'Second key (MD5) Required!';
+$_['error_merchantposid'] = '"POS ID" is required!';
+$_['error_signaturekey'] = '"Second key (MD5)" is required!';
+$_['error_oauth_client_id'] = '"OAuth protocol - client_id" is required!';
+$_['error_oauth_client_secret'] = '"OAuth protocol - client_secret" is required!';
