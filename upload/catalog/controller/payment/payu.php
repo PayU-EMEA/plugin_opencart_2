@@ -19,7 +19,7 @@ class ControllerPaymentPayU extends Controller
 
     const PAY_BUTTON = 'https://static.payu.com/pl/standard/partners/buttons/payu_account_button_01.png';
 
-    const VERSION = '3.1.1';
+    const VERSION = '3.1.2';
 
     private $ocr = array();
     private $totalWithoutDiscount = 0;

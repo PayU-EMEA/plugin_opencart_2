@@ -1,7 +1,8 @@
 # PayU account plugin for OpenCart over 2.x
 
-**Note: Plugin supports only OpenCart 2.x**
+**Note: Plugin supports only OpenCart 2.0.x, 2.1.x and 2.2.x**
 
+**For OpenCart 2.3.x please use 3.2.x plugin**
 
 ``This plugin is released under the GPL license.``
 
@@ -25,12 +26,10 @@ The PayU payments OpenCart plugin adds the PayU payment option and enables you t
 
 ## Prerequisites
 
-**Important:** This plugin works only with checkout (REST API) points of sales (POS).
+**Important:** This plugin works only with checkout (**REST API**) points of sales (POS).
 
-The following PHP extensions are required:
-
-* [cURL][ext2] to connect and communicate to many different types of servers with many different types of protocols.
-* [hash][ext3] to process directly or incrementally the arbitrary length messages by using a variety of hashing algorithms.
+* PHP >= 5.3.0
+* PHP extensions are required - [cURL][ext2], [hash][ext3] 
 
 ## Installation
 
@@ -88,7 +87,5 @@ Defines which status is assigned to an order at a particular stage of order proc
 
 <!--external links:-->
 [ext1]: https://github.com/PayU/plugin_opencart_2
-[ext2]: http://php.net/manual/en/book.curl.php
-[ext3]: http://php.net/manual/en/book.hash.php
 
 <!--images:-->

@@ -1,3 +1,6 @@
+## 3.1.2
+* Fix table create
+
 ## 3.1.1
 * Add 2.2.x.x compatibility 
 
