@@ -1,3 +1,10 @@
+## 3.2.0
+* Add 2.3.x.x compatibility
+* add Oauth support
+
+## 3.1.2
+* Fix table create
+
 ## 3.1.1
 * Add 2.2.x.x compatibility 
 
