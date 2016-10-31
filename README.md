@@ -1,14 +1,12 @@
-# PayU account plugin for OpenCart over 2.x
+# PayU account plugin for OpenCart version 2.3.x
 
-**Note: Plugin supports only OpenCart 2.x**
+**Note: Plugin supports only OpenCart 2.3.x**
 
+**For OpenCart 2.0.x, 2.1.x or 2.2.x please use 3.1.x plugin**
 
 ``This plugin is released under the GPL license.``
 
 **If you have any questions or issues, feel free to contact our technical support: tech@payu.pl**
-
-PayU account is a web application designed as an e-wallet for shoppers willing to open an account, 
-define their payment options, see their purchase history, and manage personal profiles.
 
 ## Table of Contents
 
@@ -25,29 +23,27 @@ The PayU payments OpenCart plugin adds the PayU payment option and enables you t
 
 ## Prerequisites
 
-**Important:** This plugin works only with checkout (REST API) points of sales (POS).
+**Important:** This plugin works only with checkout (**REST API**) points of sales (POS).
 
-The following PHP extensions are required:
-
-* [cURL][ext2] to connect and communicate to many different types of servers with many different types of protocols.
-* [hash][ext3] to process directly or incrementally the arbitrary length messages by using a variety of hashing algorithms.
+* PHP >= 5.3.0
+* PHP extensions are required - [cURL][ext2], [hash][ext3] 
 
 ## Installation
 
 To install the plugin, copy folders and activate it on the administration page:
 
 1. Copy the folders from [the plugin repository][ext1] to your OpenCart root folder on the server.
-2. Go to the OpenCart administration page [http://your-opencart-url/admin].
-3. Go to **Extensions** > **Payments**.
-4. In the **PayU** section click **Install**.
-
+1. Go to the OpenCart administration page [http://your-opencart-url/admin].
+1. Go to **Extensions** > **Extensions**.
+1. Set filter to **Payments** 
+1. In the **PayU** section click **Install**.
 
 ## Configuration
 
 1. Go to the OpenCart administration page [http://your-opencart-url/admin].
-2. Go to **Extensions** > **Payments**.
-3. In the **PayU** section click **Edit**.
-
+1. Go to **Extensions** > **Extensions**.
+1. Set filter to **Payments** 
+1. In the **PayU** section click **Edit**.
 
 ### Configuration Parameters
 
@@ -68,8 +64,10 @@ The main parameters for plugin configuration are as follows:
 
 | Parameter | Description | 
 |:---------:|:-----------:|
-|POS ID|Unique ID of the POS (POS ID (pos_id) - from PayU merchant panel)|
-|Second Key| MD5 key for securing communication (Key (MD5)- from PayU merchant panel)|
+|POS ID|Unique ID of the POS|
+|Second Key|MD5 key for securing communication|
+|OAuth - client_id|client_id for OAuth|
+|OAuth - client_secret|client_secret for OAuth|
 
 #### Status parameters
 
