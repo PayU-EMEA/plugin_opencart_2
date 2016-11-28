@@ -1,3 +1,6 @@
+## 3.2.1
+* Fix language
+
 ## 3.2.0
 * Add 2.3.x.x compatibility
 * add Oauth support
