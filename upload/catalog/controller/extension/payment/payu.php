@@ -67,8 +67,9 @@ class ControllerExtensionPaymentPayU extends Controller
                     );
 
                     $return['status'] = 'SUCCESS';
-                    $return['redirectUri'] = $response->getResponse()->redirectUri . '&lang=' .
-                        strtolower($this->session->data['language']);
+
+                    $return['redirectUri'] = $response->getResponse()->redirectUri . '&lang=' . $this->getLanguage($this->session->data['language']);
+
                 } else {
                     $return['status'] = 'ERROR';
 
@@ -302,6 +303,12 @@ class ControllerExtensionPaymentPayU extends Controller
             $orderIP
         )
             ? '127.0.0.1' : $orderIP;
+    }
+
+    private function getLanguage($code)
+    {
+        $locale = locale_parse($code);
+        return $locale['language'];
     }
 
 }
