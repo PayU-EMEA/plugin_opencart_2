@@ -13,7 +13,7 @@ class ControllerExtensionPaymentPayU extends Controller
 {
     const PAY_BUTTON = 'https://static.payu.com/pl/standard/partners/buttons/payu_account_button_01.png';
 
-    const VERSION = '3.2.1';
+    const VERSION = '3.2.2';
 
     private $ocr = array();
     private $totalWithoutDiscount = 0;
@@ -35,7 +35,7 @@ class ControllerExtensionPaymentPayU extends Controller
     public function index()
     {
         $data['payu_button'] = self::PAY_BUTTON;
-        $data['action'] = $this->url->link('extension/payment/payu/pay');
+        $data['action'] = $this->url->link('extension/payment/payu/pay','', true);
 
         return $this->load->view('extension/payment/payu', $data);
     }
@@ -68,7 +68,7 @@ class ControllerExtensionPaymentPayU extends Controller
 
                     $return['status'] = 'SUCCESS';
 
-                    $return['redirectUri'] = $response->getResponse()->redirectUri . '&lang=' . $this->getLanguage($this->session->data['language']);
+                    $return['redirectUri'] = $response->getResponse()->redirectUri . '&lang=' . substr($this->session->data['language'], 0, 2);
 
                 } else {
                     $return['status'] = 'ERROR';
@@ -174,11 +174,10 @@ class ControllerExtensionPaymentPayU extends Controller
 
         //OCR basic data
         $this->ocr['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
-        $this->ocr['orderUrl'] = $this->url->link('extension/payment/payu/callback') . '?order=' . $order_info['order_id'];
         $this->ocr['description'] = $this->language->get('text_payu_order') . ' #' . $order_info['order_id'];
         $this->ocr['customerIp'] = $this->getIP($order_info['ip']);
-        $this->ocr['notifyUrl'] = $this->url->link('extension/payment/payu/ordernotify');
-        $this->ocr['continueUrl'] = $this->url->link('checkout/success');
+        $this->ocr['notifyUrl'] = $this->url->link('extension/payment/payu/ordernotify', '', true);
+        $this->ocr['continueUrl'] = $this->url->link('checkout/success', '', true);
         $this->ocr['currencyCode'] = $order_info['currency_code'];
         $this->ocr['totalAmount'] = $this->toAmount(
             $this->currencyFormat($order_info['total'], $order_info['currency_code'])
@@ -303,12 +302,6 @@ class ControllerExtensionPaymentPayU extends Controller
             $orderIP
         )
             ? '127.0.0.1' : $orderIP;
-    }
-
-    private function getLanguage($code)
-    {
-        $locale = locale_parse($code);
-        return $locale['language'];
     }
 
 }

@@ -1,3 +1,7 @@
+## 3.2.2
+* Fix generate url with https
+* Remove dependence to PHP intl extension
+
 ## 3.2.1
 * Fix language
 
