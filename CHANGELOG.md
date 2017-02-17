@@ -1,3 +1,6 @@
+## 3.1.3
+* Fix generate url with https
+
 ## 3.1.2
 * Fix table create
 

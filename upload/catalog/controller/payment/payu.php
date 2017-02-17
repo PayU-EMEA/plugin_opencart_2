@@ -1,7 +1,7 @@
 <?php
 
 /*
-* ver. 3.1.1
+* ver. 3.1.3
 * PayU Payment Modules
 *
 * @copyright  Copyright 2016 by PayU
@@ -19,7 +19,7 @@ class ControllerPaymentPayU extends Controller
 
     const PAY_BUTTON = 'https://static.payu.com/pl/standard/partners/buttons/payu_account_button_01.png';
 
-    const VERSION = '3.1.2';
+    const VERSION = '3.1.3';
 
     private $ocr = array();
     private $totalWithoutDiscount = 0;
@@ -40,7 +40,7 @@ class ControllerPaymentPayU extends Controller
     public function index()
     {
         $data['payu_button'] = self::PAY_BUTTON;
-        $data['action'] = $this->url->link('payment/payu/pay');
+        $data['action'] = $this->url->link('payment/payu/pay', '', true);
 
         if ($this->isVersion22()) {
             return $this->load->view('payment/payu', $data);
@@ -185,11 +185,10 @@ class ControllerPaymentPayU extends Controller
 
         //OCR basic data
         $this->ocr['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
-        $this->ocr['orderUrl'] = $this->url->link('payment/payu/callback') . '?order=' . $order_info['order_id'];
         $this->ocr['description'] = $this->language->get('text_payu_order') . ' #' . $order_info['order_id'];
         $this->ocr['customerIp'] = $this->getIP($order_info['ip']);
-        $this->ocr['notifyUrl'] = $this->url->link('payment/payu/ordernotify');
-        $this->ocr['continueUrl'] = $this->url->link('checkout/success');
+        $this->ocr['notifyUrl'] = $this->url->link('payment/payu/ordernotify', '', true);
+        $this->ocr['continueUrl'] = $this->url->link('checkout/success', '', true);
         $this->ocr['currencyCode'] = $order_info['currency_code'];
         $this->ocr['totalAmount'] = $this->toAmount(
             $this->currencyFormat($order_info['total'], $order_info['currency_code'])
