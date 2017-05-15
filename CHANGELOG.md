@@ -1,3 +1,7 @@
+## 3.1.4
+* Ignore all notification after COMPLETED
+* Cut too long product name
+
 ## 3.1.3
 * Fix generate url with https
 
