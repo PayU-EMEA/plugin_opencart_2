@@ -117,12 +117,14 @@ class ControllerExtensionPaymentPayU extends Controller
                         $orderRetrive->getError() . ' [response: ' . serialize($orderRetrive->getResponse()) . ']'
                     );
                 } else {
+                    $payuOrderStatus = $orderRetrive->getResponse()->orders[0]->status;
+                    $order = $this->model_checkout_order->getOrder($orderInfo['order_id']);
 
                     if ($orderInfo['status'] != OpenPayuOrderStatus::STATUS_COMPLETED) {
-                        $newstatus = $this->getPaymentStatusId($orderRetrive->getResponse()->orders[0]->status);
+                        $newstatus = $this->getPaymentStatusId($payuOrderStatus);
 
-                        if ($newstatus && $newstatus != $orderInfo['status']) {
-                            $this->model_extension_payment_payu->updateSatatus($session_id, $newstatus);
+                        if ($newstatus && $newstatus != $order['order_status']) {
+                            $this->model_extension_payment_payu->updateSatatus($session_id, $payuOrderStatus);
                             $this->model_checkout_order->addOrderHistory($orderInfo['order_id'], $newstatus);
                         }
 
@@ -132,6 +134,7 @@ class ControllerExtensionPaymentPayU extends Controller
 
         } catch (OpenPayU_Exception $e) {
             $this->logger->write('OCR Notification: ' . $e->getMessage());
+            die($e->getMessage());
         }
 
     }
