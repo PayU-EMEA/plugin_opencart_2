@@ -249,7 +249,7 @@ class ControllerPaymentPayU extends Controller
 
             $this->ocr['products'][] = array(
                 'quantity' => $item['quantity'],
-                'name' => $item['name'],
+                'name' => substr($item['name'], 0, 250),
                 'unitPrice' => $itemGross
             );
 
