@@ -1,3 +1,7 @@
+## 3.2.3
+* Ignore all notification after COMPLETED
+* Cut too long product name
+
 ## 3.2.2
 * Fix generate url with https
 * Remove dependence to PHP intl extension

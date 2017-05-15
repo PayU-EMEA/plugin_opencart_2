@@ -1,7 +1,7 @@
 <?php
 
 /*
-* ver. 3.1.1
+* ver. 3.2.3
 * PayU Payment Modules
 *
 * @copyright  Copyright 2016 by PayU
@@ -13,7 +13,7 @@ class ControllerExtensionPaymentPayU extends Controller
 {
     const PAY_BUTTON = 'https://static.payu.com/pl/standard/partners/buttons/payu_account_button_01.png';
 
-    const VERSION = '3.2.2';
+    const VERSION = '3.2.3';
 
     private $ocr = array();
     private $totalWithoutDiscount = 0;
