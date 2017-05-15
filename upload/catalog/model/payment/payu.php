@@ -43,7 +43,7 @@ class ModelPaymentPayu extends Model
 
     public function bindOrderIdAndSessionId($orderId, $sessionId)
     {
-        $query = 'INSERT INTO ' . DB_PREFIX . 'payu_so VALUES (NULL, "'.(int)$orderId.'", "'.$this->db->escape($sessionId).'", 1)';
+        $query = 'INSERT INTO ' . DB_PREFIX . 'payu_so VALUES (NULL, "'.(int)$orderId.'", "'.$this->db->escape($sessionId).'", "PENDING")';
         return $this->db->query($query);
     }
 
