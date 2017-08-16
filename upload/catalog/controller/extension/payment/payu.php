@@ -21,7 +21,7 @@ class ControllerExtensionPaymentPayU extends Controller
     //loading PayU SDK
     private function loadLibConfig()
     {
-        require_once(DIR_SYSTEM . 'library/sdk_v21/openpayu.php');
+        require_once(DIR_SYSTEM . 'library/payu/openpayu.php');
 
         OpenPayU_Configuration::setMerchantPosId($this->config->get('payu_merchantposid'));
         OpenPayU_Configuration::setSignatureKey($this->config->get('payu_signaturekey'));
