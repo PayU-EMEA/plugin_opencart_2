@@ -1,3 +1,6 @@
+## 3.2.4
+* Prevent double click
+
 ## 3.2.3
 * Ignore all notification after COMPLETED
 * Cut too long product name
