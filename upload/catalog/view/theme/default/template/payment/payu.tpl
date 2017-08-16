@@ -8,26 +8,31 @@
 </div>
 <div id="payu-error"></div>
 <script type="text/javascript"><!--
+    var isClicked = false;
     $('#payu-pay').on('click', function() {
-        $.ajax({
-            type: 'get',
-            url: '<?php echo $action; ?>',
-            cache: false,
-            dataType: 'json',
-            beforeSend: function () {
-                $('#payu-error').empty();
-                $('#payu-pay').css('cursor', 'wait');
-            },
-            complete: function () {
-                $('#payu-pay').css('cursor', 'pointer');
-            },
-            success: function (ret) {
-                if (ret.status == 'SUCCESS') {
-                    location = ret.redirectUri
-                } else {
-                    $('#payu-error').empty().append(ret.message);
+        if (isClicked === false) {
+            isClicked = true;
+            $.ajax({
+                type: 'get',
+                url: '<?php echo $action; ?>',
+                cache: false,
+                dataType: 'json',
+                beforeSend: function () {
+                    $('#payu-error').empty();
+                    $('#payu-pay').css('cursor', 'wait');
+                },
+                complete: function () {
+                    $('#payu-pay').css('cursor', 'pointer');
+                },
+                success: function (ret) {
+                    if (ret.status === 'SUCCESS') {
+                        location = ret.redirectUri
+                    } else {
+                        $('#payu-error').empty().append(ret.message);
+                        isClicked = false;
+                    }
                 }
-            }
-        });
+            });
+        }
     });
 //--></script>
