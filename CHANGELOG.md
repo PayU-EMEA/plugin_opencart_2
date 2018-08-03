@@ -1,3 +1,6 @@
+## 3.1.6
+* SHA256 as default
+
 ## 3.1.5
 * Prevent double click
 
