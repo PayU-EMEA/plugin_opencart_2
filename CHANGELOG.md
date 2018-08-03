@@ -1,3 +1,6 @@
+## 3.2.5
+* Update SDK
+
 ## 3.2.4
 * Prevent double click
 
