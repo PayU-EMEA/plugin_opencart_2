@@ -6,7 +6,7 @@
 
 ``This plugin is released under the GPL license.``
 
-**If you have any questions or issues, feel free to contact our technical support: tech@payu.pl**
+**If you have any questions or issues, feel free to contact our [technical support][ext4]**
 
 ## Table of Contents
 
@@ -88,5 +88,6 @@ Defines which status is assigned to an order at a particular stage of order proc
 [ext1]: https://github.com/PayU/plugin_opencart_2
 [ext2]: http://php.net/manual/en/book.curl.php
 [ext3]: http://php.net/manual/en/book.hash.php
+[ext4]: https://www.payu.pl/en/help
 
 <!--images:-->
