@@ -1,3 +1,6 @@
+## 3.1.7
+* Fix generate url with https
+
 ## 3.1.6
 * SHA256 as default
 
