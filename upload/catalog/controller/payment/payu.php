@@ -40,7 +40,7 @@ class ControllerPaymentPayU extends Controller
     public function index()
     {
         $data['payu_button'] = self::PAY_BUTTON;
-        $data['action'] = $this->url->link('payment/payu/pay', '', true);
+        $data['action'] = $this->url->link('payment/payu/pay', '', 'SSL');
 
         if ($this->isVersion22()) {
             return $this->load->view('payment/payu', $data);
@@ -190,8 +190,8 @@ class ControllerPaymentPayU extends Controller
         $this->ocr['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
         $this->ocr['description'] = $this->language->get('text_payu_order') . ' #' . $order_info['order_id'];
         $this->ocr['customerIp'] = $this->getIP($order_info['ip']);
-        $this->ocr['notifyUrl'] = $this->url->link('payment/payu/ordernotify', '', true);
-        $this->ocr['continueUrl'] = $this->url->link('checkout/success', '', true);
+        $this->ocr['notifyUrl'] = $this->url->link('payment/payu/ordernotify', '', 'SSL');
+        $this->ocr['continueUrl'] = $this->url->link('checkout/success', '', 'SSL');
         $this->ocr['currencyCode'] = $order_info['currency_code'];
         $this->ocr['totalAmount'] = $this->toAmount(
             $this->currencyFormat($order_info['total'], $order_info['currency_code'])
