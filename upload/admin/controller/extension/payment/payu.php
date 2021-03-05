@@ -23,7 +23,7 @@ class ControllerExtensionPaymentPayU extends Controller
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
             $this->model_setting_setting->editSetting('payu', $this->request->post);
             $this->session->data['success'] = $this->language->get('text_success');
-            $this->response->redirect($this->url->link('extension/extension', 'token=' . $this->session->data['token'], true));
+            $this->response->redirect($this->url->link('extension/extension', 'token=' . $this->session->data['token'], 'SSL'));
         }
 
         //language data
@@ -114,22 +114,22 @@ class ControllerExtensionPaymentPayU extends Controller
         $data['breadcrumbs'] = array();
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_home'),
-            'href' => $this->url->link('common/home', 'token=' . $this->session->data['token'], true)
+            'href' => $this->url->link('common/home', 'token=' . $this->session->data['token'], 'SSL')
         );
 
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_extension'),
-            'href' => $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true)
+            'href' => $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', 'SSL')
         );
 
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('heading_title'),
-            'href' => $this->url->link('extension/payment/payu', 'token=' . $this->session->data['token'], true)
+            'href' => $this->url->link('extension/payment/payu', 'token=' . $this->session->data['token'], 'SSL')
         );
 
         //links
-        $data['action'] = $this->url->link('extension/payment/payu', 'token=' . $this->session->data['token'], true);
-        $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'], true);
+        $data['action'] = $this->url->link('extension/payment/payu', 'token=' . $this->session->data['token'], 'SSL');
+        $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'], 'SSL');
 
 
         $data['header'] = $this->load->controller('common/header');
