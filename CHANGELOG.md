@@ -1,3 +1,6 @@
+## 3.1.8
+* Fix doGet
+
 ## 3.1.7
 * Fix generate url with https
 
