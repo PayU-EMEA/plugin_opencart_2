@@ -1,3 +1,5 @@
+# Warning: This plugin for OpenCart 1.X has been archived, it’s no longer maintained
+
 # PayU account plugin for OpenCart version 2.3.x
 
 **Note: Plugin supports only OpenCart 2.3.x**
